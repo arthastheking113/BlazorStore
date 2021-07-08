@@ -1,0 +1,606 @@
+﻿@page "/manage/blogpost"
+
+@using BlazorStore.Models
+@using Microsoft.EntityFrameworkCore
+@using BlazorStore.Data
+@inject IJSRuntime JSRuntime
+@inject ApplicationDbContext _context
+@using BlazorStore.Services
+@inject IImageService _imageService
+@inject ISlugService _slugService
+@using BlazingComponents.Summernote
+@using System.IO
+<div class="vertical-nav bg-white @active" id="sidebar">
+    <SideNav></SideNav>
+</div>
+
+<!-- Page content holder -->
+<div class="page-content pr-3 pl-3 pb-5 pt-0 mb-5  @active" id="content">
+
+    <div class="container-fluid">
+        <!-- Demo content -->
+        <p class="lead">Admin System Management</p>
+
+        <div class="separator"></div>
+
+        <!--Begin Content-->
+
+        @if (itemList is not null)
+        {
+            <div class="row">
+            
+                <div class="col-md-10">
+                    <button class="btn btn-secondary text-white mb-4" @onclick="@(() => _dialog.Open())">Create new Item</button>
+                    <br /><br />
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover display responsive nowrap" cellspacing="0" id="postBlogTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 16.66%">Image</th>
+                                    <th>Title</th>
+                                    <th>Abstract</th>
+                                    <th>Category</th>
+                                    <th>Ready?</th>
+                                    <th>Adjustment</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (itemList is not null)
+                                {
+                                    @foreach (var item in itemList)
+                                    {
+                                        var currentSlug = item.Slug;
+                                        <tr>
+                                            <td><img class="img-fluid" src="@_imageService.DecodeFileBlogPost(item.ImageData,item.ContentType)" /></td>
+                                            <td>@item.Title</td>
+                                            <td>@item.Abstract</td>
+                                            <td>@item.BlogCategory.Name</td>
+                                            <td>@item.IsproductionReady</td>
+                                            <td>
+                                                <a class="btn btn-success text-white" href="/post/details/@item.Slug">View</a>
+                                                <a class="btn btn-primary text-white" style="cursor:pointer" @onclick="() => OpenEditDialog(currentSlug)">
+                                                    Edit
+                                                </a>
+                                                <a class="btn btn-danger text-white" style="cursor:pointer" @onclick="() => OpenDeleteDialog(currentSlug)">
+                                                    Delete
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th style="width: 16.66%">Image</th>
+                                    <th>Title</th>
+                                    <th>Abstract</th>
+                                    <th>Category</th>
+                                    <th>Ready?</th>
+                                    <th>Adjustment</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+               
+
+            </div>
+
+        }
+        else
+        {
+            <div class="row">
+                <div class="col">
+                    <p>There is no item.</p>
+                </div>
+            </div>
+        }
+
+
+
+        <!--End Content-->
+    </div>
+    <br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+    <br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+
+</div>
+<!-- End demo content -->
+
+
+<ModalDialog @ref="_dialog"
+             OverlayOpacity="@(_overlayOpacity)"
+             Width="@_modalWitdth"
+             CloseOnOverlayClick="_modalCloseOnClick"
+             CloseOnEscapeKey="_modalCloseOnEsc"
+             Focus="_modalFocus"
+             Animate="_modalAnimate"
+             Centered="_modalCentered"
+             ShowCloseButton="_modalShowClose">
+    <Header>
+        @*If you want to hide Header remove the whole Header definition and set ShowCloseButton="false"*@
+        <h4>Add New Post</h4>
+    </Header>
+    <Content>
+        <div class="container-fluid">
+            <div class="row pb-2">
+                <div class="col">
+                    <EditForm Context="SelectCategory" Model="newBlogCategory" OnValidSubmit="Add">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <InputFile OnChange="@LoadFiles" />
+
+                        <div class="row">
+                            <div class="col">
+                                <p>Title</p>
+                                <input required class="form-control" @bind="newBlogCategory.Title" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <p>Abstract</p>
+                                <input required class="form-control" @bind="newBlogCategory.Abstract" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <p>Content</p>
+                                @*<Editor @bind-content="@newBlogCategory.Content">
+
+                                </Editor>*@
+
+                                <RadzenHtmlEditor style="height: 500px; margin-bottom: 1rem;" @bind-Value=@newBlogCategory.Content />
+
+                                @*<textarea class="form-control" id="new" @bind="newBlogCategory.Content"></textarea>*@
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <p>Select Category</p>
+                                <RadzenDropDown AllowClear="true" Name="BlogCategoryID" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" @bind-Value=@newBlogCategory.BlogCategoryId Placeholder="Select Category..."
+                                                Style="width:100%" Data=@blogList TextProperty="Name" ValueProperty="Id" Change=@(args => OnChange(args))>
+                                    <Template>
+                                        Category: @((context as BlogCategory).Name)
+                                    </Template>
+                                </RadzenDropDown>
+                            </div>
+                            <div class="col">
+                                <p>Is Product Ready ?</p>
+                                <RadzenSelectBar required @bind-Value=@newBlogCategory.IsproductionReady TValue="bool" Change=@(args => OnChangeIsProductReady(args))>
+                                    <Items>
+                                        <RadzenSelectBarItem Text="Yes" Value="true" />
+                                        <RadzenSelectBarItem Text="No" Selected Value="false" />
+                                    </Items>
+                                </RadzenSelectBar>
+                            </div>
+                        </div>
+
+                        <hr />
+                        <div class="row">
+                            <div class="col text-center">
+                                <button type="submit" class="btn btn-primary text-white btn-block">Add New Post</button>
+                            </div>
+                        </div>
+                        <br />
+                    </EditForm>
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-secondary text-white btn-block" @onclick="CancelDialog">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Content>
+
+</ModalDialog>
+
+
+
+@* Edit and Delete Modal*@
+
+<ModalDialog @ref="_dialogEdit"
+             OverlayOpacity="@(_overlayOpacity)"
+             Width="@_modalWitdth"
+             CloseOnOverlayClick="_modalCloseOnClick"
+             CloseOnEscapeKey="_modalCloseOnEsc"
+             Focus="_modalFocus"
+             Animate="_modalAnimate"
+             Centered="_modalCentered"
+             ShowCloseButton="_modalShowClose">
+    <Header>
+        @*If you want to hide Header remove the whole Header definition and set ShowCloseButton="false"*@
+        <h4>Edit Post</h4>
+    </Header>
+    <Content>
+        <div class="container">
+            <div class="row pb-2">
+                <div class="col">
+                    <EditForm Model="currentCategory" Context="EditPost" OnValidSubmit="Edit">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="row">
+                            <div class="col">
+                                <p>Title</p>
+                                <input required class="form-control" @bind="currentCategory.Title" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <p>Abstract</p>
+                                <input required class="form-control" @bind="currentCategory.Abstract" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <p>Content</p>
+                                <RadzenHtmlEditor style="height: 500px; margin-bottom: 1rem;" @bind-Value=@currentCategory.Content />
+
+
+                                @*<Editor @bind-Content="currentCategory.Content"></Editor>*@
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <p>Select Category</p>
+                                <RadzenDropDown AllowClear="true" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" @bind-Value=@currentCategory.BlogCategoryId Placeholder="Select..."
+                                                Style="width:100%" Data=@blogList TextProperty="Name" ValueProperty="Id" Change=@(args => OnChange(args))>
+                                    <Template>
+                                        Category: @((context as BlogCategory).Name)
+                                    </Template>
+                                </RadzenDropDown>
+                            </div>
+                            <div class="col">
+                                <p>Is Product Ready ?</p>
+                                <RadzenSelectBar @bind-Value=@currentCategory.IsproductionReady TValue="bool" Change=@(args => OnChangeIsProductReady(args))>
+                                    <Items>
+                                        <RadzenSelectBarItem Text="Yes" Value="true" />
+                                        <RadzenSelectBarItem Text="No" Value="false" />
+                                    </Items>
+                                </RadzenSelectBar>
+                            </div>
+                        </div>
+
+                        <hr />
+                        <div class="row">
+                            <div class="col text-center">
+                                <button type="submit" class="btn btn-primary text-white btn-block">Accept Changes</button>
+                            </div>
+                        </div>
+                        <br />
+                    </EditForm>
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-secondary text-white btn-block" @onclick="CancelEditDialog">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Content>
+
+</ModalDialog>
+
+
+
+@*Delete modal*@
+<ModalDialog @ref="_dialogDelete"
+             OverlayOpacity="@(_overlayOpacity)"
+             Width="@_modalWitdth"
+             CloseOnOverlayClick="_modalCloseOnClick"
+             CloseOnEscapeKey="_modalCloseOnEsc"
+             Focus="_modalFocus"
+             Animate="_modalAnimate"
+             Centered="_modalCentered"
+             ShowCloseButton="_modalShowClose">
+    <Header>
+        @*If you want to hide Header remove the whole Header definition and set ShowCloseButton="false"*@
+        <h4>Delete Category</h4>
+    </Header>
+    <Content>
+        <div class="container">
+            <div class="row pb-2">
+                <div class="col">
+                    <EditForm Model="currentCategory" Context="DeleteContext" OnValidSubmit="Delete">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+                        <div class="row">
+                            <div class="col">
+                                <p>Title</p>
+                                <input class="form-control" readonly @bind="currentCategory.Title" />
+                            </div>
+                        </div>
+                        <br />
+                        <div class="row">
+                            <div class="col">
+                                <p>Abstract</p>
+                                <input class="form-control" readonly @bind="currentCategory.Abstract" />
+                            </div>
+                        </div>
+                        <br />
+                        <div class="row">
+                            <div class="col">
+                                <p>Select Category</p>
+                                <RadzenDropDown Disabled="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" @bind-Value=@currentCategory.BlogCategoryId Placeholder="Select..."
+                                                Style="width:100%" Data=@blogList TextProperty="Name" ValueProperty="Id" Change=@(args => OnChange(args))>
+                                    <Template>
+                                        Category: @((context as BlogCategory).Name)
+                                    </Template>
+                                </RadzenDropDown>
+                            </div>
+                            <div class="col">
+                                <p>Is Product Ready ?</p>
+                                <RadzenSelectBar Disabled="true" readonly @bind-Value=@currentCategory.IsproductionReady TValue="bool" Change=@(args => OnChangeIsProductReady(args))>
+                                    <Items>
+                                        <RadzenSelectBarItem Text="Yes" Value="true" />
+                                        <RadzenSelectBarItem Text="No" Value="false" />
+                                    </Items>
+                                </RadzenSelectBar>
+                            </div>
+                        </div>
+
+                        <hr />
+                        <div class="row">
+                            <div class="col text-center">
+                                <button type="submit" class="btn btn-danger text-white btn-block">Delete Post</button>
+                            </div>
+                        </div>
+                        <br />
+                    </EditForm>
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-secondary text-white btn-block" @onclick="CancelDeleteDialog">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Content>
+
+</ModalDialog>
+
+
+@code {
+    public string active;
+
+    public void NavToggle()
+    {
+        if (active is null)
+        {
+            active = "active";
+        }
+        else
+        {
+            active = null;
+        }
+    }
+
+    //Fully customized dialog
+    private double _overlayOpacity = 0.3;
+    private double _modalWitdth = 1250;
+    private bool _modalAnimate = true;
+    private bool _modalCloseOnClick = true;
+    private bool _modalCloseOnEsc = true;
+    private bool _modalFocus = true;
+    private bool _modalCentered = true;
+    private bool _modalShowClose = true;
+
+    private ModalDialog _dialog;
+    private ModalDialog _dialogEdit;
+    private ModalDialog _dialogDelete;
+    public Models.BlogPost currentCategory = new();
+    public Models.BlogPost tempCategory = new();
+    public List<Models.BlogCategory> blogList = new();
+    public string CategoryName;
+    bool popup;
+    private async Task OpenEditDialog(string slug)
+    {
+        currentCategory = _context.PostCategory.FirstOrDefault(b => b.Slug == slug);
+        currentCategory.Content = currentCategory.Content.ToString();
+        await _dialogEdit.Open();
+    }
+    private async Task OpenDeleteDialog(string slug)
+    {
+        currentCategory = _context.PostCategory.FirstOrDefault(b => b.Slug == slug);
+        tempCategory = currentCategory;
+        await _dialogDelete.Open();
+    }
+    private async Task OpenDialog()
+    {
+        newBlogCategory = new();
+        await _dialog.Open();
+    }
+
+    private async Task AcceptDialog()
+    {
+        //Dialog accepted code
+        await _dialog.Close();
+    }
+    private async Task CancelDialog()
+    {
+        currentCategory = new();
+        CategoryName = null;
+        //Dialog cancelled code
+        await _dialog.Close();
+    }
+    private async Task CancelEditDialog()
+    {
+        currentCategory = new();
+        CategoryName = null;
+        //Dialog cancelled code
+        await _dialogEdit.Close();
+    }
+    private async Task CancelDeleteDialog()
+    {
+        currentCategory = new();
+        //Dialog cancelled code
+        await _dialogDelete.Close();
+    }
+    void OnChange(object value)
+    {
+        var str = value is IEnumerable<object> ? string.Join(", ", (IEnumerable<object>)value) : value;
+        newBlogCategory.BlogCategoryId = Int32.Parse(str.ToString());
+    }
+
+
+    void OnPaste(HtmlEditorPasteEventArgs args)
+    {
+
+        newBlogCategory.Content = args.Html;
+    }
+
+    void OnChangeEditor(string html)
+    {
+        newBlogCategory.Content = html;
+    }
+    void OnChangeEditorForEdit(string html)
+    {
+        currentCategory.Content = html;
+    }
+
+    void OnExecute(HtmlEditorExecuteEventArgs args)
+    {
+        newBlogCategory.Content = args.CommandName;
+    }
+
+    private async Task LoadFiles(InputFileChangeEventArgs e)
+    {
+        using var stream = new MemoryStream();
+        var file = e.File;
+        var OpenSteam = file.OpenReadStream();
+        await OpenSteam.CopyToAsync(stream);
+
+        newBlogCategory.ImageData = stream.ToArray();
+        newBlogCategory.ContentType = e.File.ContentType;
+
+    }
+
+    void OnChangeIsProductReady(object value)
+    {
+        var str = value is IEnumerable<int> ? string.Join(", ", (IEnumerable<int>)value) : value;
+        newBlogCategory.IsproductionReady = bool.Parse(str.ToString());
+    }
+
+
+    public Models.BlogPost newBlogCategory = new();
+    public List<Models.BlogPost> itemList = new();
+
+    protected override void OnInitialized()
+    {
+        GetItems();
+    }
+
+    public void GetItems()
+    {
+        itemList = _context.PostCategory.ToList();
+        blogList = _context.BlogCategory.ToList();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        GetItems();
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("runDataTable", null);
+            //await JSRuntime.InvokeVoidAsync("runSummernote", null);
+        }
+    }
+
+    public async Task Add()
+    {
+        newBlogCategory.Slug = _slugService.URLFriendly(newBlogCategory.Title);
+
+        if (_slugService.IsUniquePost(_context, newBlogCategory.Slug))
+        {
+            try
+            {
+
+                newBlogCategory.CreateDate = DateTime.Now;
+                newBlogCategory.UpdateDate = DateTime.Now;
+                _context.Add(newBlogCategory);
+                _context.SaveChanges();
+
+                newBlogCategory = new();
+                GetItems();
+                await _dialog.Close();
+                await JSRuntime.InvokeVoidAsync("AddingSuccess", null);
+            }
+            catch (Exception ex)
+            {
+                await JSRuntime.InvokeVoidAsync("SomethingWentWrong", null);
+                throw;
+            }
+        }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("DupplicateSlug", null);
+        }
+    }
+    public async Task Edit()
+    {
+        var slug = _slugService.URLFriendly(currentCategory.Title);
+        if (slug != currentCategory.Slug)
+        {
+
+            if (_slugService.IsUniquePost(_context, slug))
+            {
+                try
+                {
+                    currentCategory.Slug = slug;
+                    currentCategory.UpdateDate = DateTime.Now;
+                    _context.Update(currentCategory);
+                    _context.SaveChanges();
+                    currentCategory = new();
+                    GetItems();
+                    await _dialogEdit.Close();
+                    await JSRuntime.InvokeVoidAsync("AddingSuccess", null);
+                }
+                catch (Exception ex)
+                {
+                    await JSRuntime.InvokeVoidAsync("SomethingWentWrong", null);
+                    throw;
+                }
+
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("DupplicateSlug", null);
+
+            }
+        }
+        else
+        {
+            try
+            {
+                currentCategory.UpdateDate = DateTime.Now;
+                _context.Update(currentCategory);
+                _context.SaveChanges();
+                currentCategory = new();
+                GetItems();
+                await _dialogEdit.Close();
+                await JSRuntime.InvokeVoidAsync("AddingSuccess", null);
+            }
+            catch (Exception ex)
+            {
+                await JSRuntime.InvokeVoidAsync("SomethingWentWrong", null);
+                throw;
+            }
+        }
+
+
+    }
+
+
+    private async Task Delete()
+    {
+        _context.Remove(currentCategory);
+        _context.SaveChanges();
+
+        currentCategory = new();
+        GetItems();
+        await _dialogDelete.Close();
+        await JSRuntime.InvokeVoidAsync("AddingSuccess", null);
+
+    }
+}

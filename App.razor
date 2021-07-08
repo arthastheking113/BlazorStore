@@ -1,0 +1,42 @@
+
+
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(Program).Assembly" PreferExactMatches="@true">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+        </Found>
+        <NotFound>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <Head>
+                </Head>
+                <br /><br /><br /><br /><br />
+                <div class="container mt-4">
+                    <div class="row">
+                        <div class="col text-center">
+                            <p>Sorry, there's nothing at this address.</p>
+                            <br />
+                            <p>
+                                Having trouble? <a href="/contact" style="color:blue">Contact us</a>
+                            </p>
+                            <br />
+                            <p class="lead">
+                                <a class="btn btn-primary btn-lg text-white" href="/">Home Page</a>
+                            </p>
+                            <br />
+                            <p class="lead">
+                                <a class="btn btn-primary btn-lg text-white" href="/all">All Product</a>
+                            </p>
+                            <br />
+                            <p class="lead">
+                                <a class="btn btn-primary btn-lg text-white" href="/cart">Your Cart</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+               
+
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>
+

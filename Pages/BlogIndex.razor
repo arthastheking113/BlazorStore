@@ -1,0 +1,99 @@
+﻿@page "/blog"
+
+@using BlazorStore.Models
+@using BlazorStore.Data
+@using Microsoft.EntityFrameworkCore
+@inject ApplicationDbContext _context
+@using BlazorStore.Services
+@inject IImageService _imageService
+<Head>
+</Head>
+
+<!-- Breadcrumbs -->
+<div class="breadcrumbs">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-1"></div>
+            <div class="col-lg-7 col-12">
+                <div class="bread-inner">
+                    <ul class="bread-list">
+                        <li><a href="index1.html">Home<i class="ti-arrow-right"></i></a></li>
+                        <li class="active"><a href="/blog">Blog Posts</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Breadcrumbs -->
+<!-- Start Blog Single -->
+<section class="blog-single section">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-1"></div>
+            <div class="col-lg-7 col-12">
+                <div class="blog-single-main">
+                    <div class="row">
+                        @if (PostList is not null)
+                        {
+                            foreach (var item in PostList)
+                            {
+                                <div class="col-md-4">
+                                    <div class="blog-index">
+                                        <div class="image">
+                                            <a href="/post/details/@item.Slug"><img src="@_imageService.DecodeFileBlogPost(item.ImageData,item.ContentType)" style="width:100%;height:150px" alt="#"></a>
+                                        </div>
+                                        <div class="blog-detail p-1 pl-3 pr-2">
+                                            <h5 class="blog-title"><a style="font-weight:600;font-size:16px;" href="/post/details/@item.Slug">@item.Title</a></h5>
+                                            <div class="blog-meta">
+                                                <span class="author"><a target="_blank" href="https://duylanle-portfolio.netlify.app/"><i class="fa fa-user"></i>By Duy Lan Le</a><a><i class="fa fa-calendar"></i>@item.CreateDate.ToString("MMMM/dd/yyyy")</a></span>
+                                                <span class="author"><a><i class="fa fa-comments"></i>Comment (@item.PostComments.Count)</a><a><i class="fa fa-eye"></i>View (@item.ViewCount)</a></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <br />
+                                </div>
+                            }
+                        }
+
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-12">
+                <div class="main-sidebar">
+                    <CategoryRightNav></CategoryRightNav>
+
+                </div>
+            </div>
+
+            <div class="col-md-1 col-12"></div>
+        </div>
+    </div>
+</section>
+<!--/ End Blog Single -->
+
+
+@code {
+    public List<Models.BlogPost> PostList = new();
+
+    protected override void OnInitialized()
+    {
+        GetData();
+    }
+
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        //if (!firstRender)
+        //{
+        //    GetData();
+        //}
+    }
+
+
+    public void GetData()
+    {
+        PostList = _context.PostCategory.Include(p => p.PostComments).ToList();
+
+    }
+}

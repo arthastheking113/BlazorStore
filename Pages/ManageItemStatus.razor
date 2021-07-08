@@ -1,0 +1,246 @@
+﻿@page "/manage/itemstatus"
+
+@using BlazorStore.Models
+@using Microsoft.EntityFrameworkCore
+@using BlazorStore.Data
+@inject IJSRuntime JSRuntime
+@inject ApplicationDbContext _context
+
+<div class="vertical-nav bg-white @active" id="sidebar">
+    <SideNav></SideNav>
+</div>
+
+<!-- Page content holder -->
+<div class="page-content pr-3 pl-3 pb-5 pt-0 mb-5  @active" id="content">
+
+    <div class="container-fluid">
+        <!-- Demo content -->
+        <p class="lead">Admin System Management</p>
+
+        <div class="separator"></div>
+
+        <!--Begin Content-->
+
+        @if (itemList is not null)
+        {
+            <div class="row">
+                <div class="col-5">
+                    <button class="btn btn-secondary text-white mb-4" @onclick="@(() => _dialog.Open())">Create new Item</button>
+                    <br />
+                    <br />
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover display responsive nowrap" cellspacing="0" id="statusTable">
+                            <thead>
+                                <tr>
+                                    <th>Id</th>
+                                    <th>Name</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in itemList)
+                                {
+                                    var currentSlug = item.Id;
+                                    <tr>
+                                        <td>@item.Id</td>
+                                        <td>@item.Name</td>
+                                        <td>
+                                            <a class="btn btn-primary text-white" style="cursor:pointer" @onclick="@(() => OpenEditDialog(currentSlug))">
+                                                Edit
+                                            </a>
+                                            <a class="btn btn-danger text-white" style="cursor:pointer" @onclick="() => OpenDeleteDialog(currentSlug)">
+                                                Delete
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th>Id</th>
+                                    <th>Name</th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                </div>
+         
+            </div>
+        }
+        else
+        {
+            <div class="row">
+                <div class="col">
+                    <p>There is no item.</p>
+                </div>
+            </div>
+        }
+
+
+        <!--End Content-->
+    </div>
+    <br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+    <br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+
+</div>
+<!-- End demo content -->
+
+@code {
+    public string active;
+
+    public void NavToggle()
+    {
+        if (active is null)
+        {
+            active = "active";
+        }
+        else
+        {
+            active = null;
+        }
+    }
+
+
+
+
+    //Fully customized dialog
+    private double _overlayOpacity = 0.3;
+    private double _modalWitdth = 800;
+    private bool _modalAnimate = true;
+    private bool _modalCloseOnClick = true;
+    private bool _modalCloseOnEsc = true;
+    private bool _modalFocus = true;
+    private bool _modalCentered = true;
+    private bool _modalShowClose = true;
+
+    private ModalDialog _dialog;
+    private ModalDialog _dialogEdit;
+    private ModalDialog _dialogDelete;
+    public Models.ItemStatus currentCategory = new();
+    public Models.ItemStatus tempCategory = new();
+
+    public Models.ItemStatus newBlogCategory = new();
+    public List<Models.ItemStatus> itemList = new();
+    public string CategoryName;
+    private async Task OpenEditDialog(int id)
+    {
+        currentCategory = _context.ItemStatus.FirstOrDefault(b => b.Id == id);
+        tempCategory = currentCategory;
+        CategoryName = tempCategory.Name;
+        await _dialogEdit.Open();
+    }
+    private async Task OpenDeleteDialog(int id)
+    {
+        currentCategory = _context.ItemStatus.FirstOrDefault(b => b.Id == id);
+        tempCategory = currentCategory;
+        await _dialogDelete.Open();
+    }
+    private async Task OpenDialog()
+    {
+        newBlogCategory = new();
+        await _dialog.Open();
+    }
+
+    private async Task AcceptDialog()
+    {
+        //Dialog accepted code
+        await _dialog.Close();
+    }
+    private async Task CancelDialog()
+    {
+        currentCategory = new();
+        //Dialog cancelled code
+        await _dialog.Close();
+    }
+    private async Task CancelEditDialog()
+    {
+        currentCategory = new();
+        //Dialog cancelled code
+        await _dialogEdit.Close();
+    }
+    private async Task CancelDeleteDialog()
+    {
+        currentCategory = new();
+        //Dialog cancelled code
+        await _dialogDelete.Close();
+    }
+
+
+    public async Task Add()
+    {
+        try
+        {
+
+            _context.Add(newBlogCategory);
+            _context.SaveChanges();
+
+            newBlogCategory = new();
+            GetItems();
+            await _dialog.Close();
+            await JSRuntime.InvokeVoidAsync("AddingSuccess", null);
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("SomethingWentWrong", null);
+            throw;
+        }
+    }
+    public async Task Edit()
+    {
+        try
+        {
+            currentCategory.Name = CategoryName;
+            _context.Update(currentCategory);
+            _context.SaveChanges();
+            currentCategory = new();
+            GetItems();
+            await _dialogEdit.Close();
+            await JSRuntime.InvokeVoidAsync("AddingSuccess", null);
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("SomethingWentWrong", null);
+            throw;
+        }
+
+
+    }
+
+
+    private async Task Delete()
+    {
+        _context.Remove(currentCategory);
+
+        _context.SaveChanges();
+
+        currentCategory = new();
+        GetItems();
+        await _dialogDelete.Close();
+        await JSRuntime.InvokeVoidAsync("AddingSuccess", null);
+
+    }
+
+
+
+
+
+    protected override void OnInitialized()
+    {
+        GetItems();
+    }
+
+    public void GetItems()
+    {
+        itemList = _context.ItemStatus.ToList();
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+
+            await JSRuntime.InvokeVoidAsync("runDataTable", null);
+        }
+    }
+}

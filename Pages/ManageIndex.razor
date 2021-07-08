@@ -1,0 +1,48 @@
+﻿@page "/manage"
+
+
+<div class="vertical-nav bg-white @active" id="sidebar">
+    <SideNav></SideNav>
+</div>
+
+<!-- Page content holder -->
+<div class="page-content pr-3 pl-3 pb-5 pt-0 mb-5  @active" id="content">
+
+    <div class="container-fluid">
+        <!-- Demo content -->
+        <p class="lead">Admin System Management</p>
+
+        <div class="separator"></div>
+
+        <!--Begin Content-->
+
+        <div class="row">
+            <div class="col">
+                <h5>Welcome to Lan's Management System.</h5>
+            </div>
+        </div>
+
+
+        <!--End Content-->
+    </div>
+    <br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+    <br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+
+</div>
+<!-- End demo content -->
+
+@code {
+    public string active;
+
+    public void NavToggle()
+    {
+        if (active is null)
+        {
+            active = "active";
+        }
+        else
+        {
+            active = null;
+        }
+    }
+}

@@ -1,0 +1,517 @@
+﻿@page "/category/{category}"
+@page "/all"
+@page "/search/{searchString}"
+@using BlazorStore.Data
+@using Microsoft.EntityFrameworkCore
+@using BlazorStore.Services
+@using Microsoft.AspNetCore.Identity
+@using BlazorStore.Models
+@using Microsoft.AspNetCore.Http;
+@inject IHttpContextAccessor _httpContextAccessor
+@inject UserManager<CustomUser> _userManager
+@inject IImageService _imageService
+@inject ApplicationDbContext _context
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+<!-- Header -->
+<header class="header shop">
+
+    <!-- Topbar -->
+    <div class="topbar">
+        <div class="container mt-0">
+            <div class="row">
+                <div class="col-lg-5 col-md-12 col-12">
+                    <!-- Top Left -->
+                    <div class="top-left">
+                        <ul class="list-main">
+                            <li><i class="ti-headphone-alt"></i> +1 (402) 304-0329</li>
+                            <li><i class="ti-email"></i> arthastheking113@gmail.com</li>
+                        </ul>
+                    </div>
+                    <!--/ End Top Left -->
+                </div>
+                <div class="col-lg-7 col-md-12 col-12">
+                    <!-- Top Right -->
+                    <div class="right-content">
+                        <ul class="list-main">
+                            <li><i class="ti-location-pin"></i> Lincoln, NE</li>
+                            <LoginDisplay />
+                        </ul>
+                    </div>
+                    <!-- End Top Right -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="middle-inner">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-2 col-md-2 col-12">
+                    <!-- Logo -->
+                    <div class="logo">
+                        <a href="/"><img src="images/logo.png" style="width:90px;height:81px" alt="logo"></a>
+                    </div>
+                    <!--/ End Logo -->
+                    <!-- Search Form -->
+                    <div class="search-top @searchActive">
+                        <div class="top-search"><a @onclick="(() => OpenSearch())"><i class="ti-search"></i></a></div>
+                        <!-- Search Form -->
+                        <div class="search-top @searchActive">
+                            <EditForm Model="searchProduct" OnValidSubmit="Search" class="search-form">
+                                <input type="text" placeholder="Search here..." @bind="searchProduct.Search">
+                                <button value="search" type="submit"><i class="ti-search"></i></button>
+                            </EditForm>
+                        </div>
+                        <!--/ End Search Form -->
+                    </div>
+                    <!--/ End Search Form -->
+                    <div class="mobile-nav"></div>
+                </div>
+                <div class="col-lg-8 col-md-7 col-12">
+                    <div class="search-bar-top">
+                        <div class="search-bar">
+                            <EditForm Model="searchProduct" OnValidSubmit="Search">
+                                <input placeholder="Search Products Here....." @bind="searchProduct.Search">
+                                <button type="submit" class="btnn"><i class="ti-search"></i></button>
+                            </EditForm>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-3 col-12">
+                    <div class="right-bar">
+                        <!-- Search Form -->
+                        <div class="sinlge-bar">
+                            <a href="/wishlist" class="single-icon"><i class="fa fa-heart-o" aria-hidden="true"></i></a>
+                        </div>
+                        @if (_httpContextAccessor.HttpContext.User.IsInRole("NormalUser"))
+                        {
+                            <div class="sinlge-bar">
+                                <a target="_parent" href="/Identity/Account/Manage" class="single-icon"><i class="fa fa-user-circle-o" aria-hidden="true"></i></a>
+                            </div>
+                        }
+
+
+
+                        <div class="sinlge-bar shopping">
+                            <a href="#" class="single-icon">
+                                <i class="ti-bag"></i>
+                                <span class="total-count">
+                                    @if (CartItem is not null)
+                                    {
+                                        totalItem = 0;
+                                        foreach (var item in CartItem)
+                                        {
+                                            totalItem += item.Quantity;
+                                        }
+                                        @totalItem
+                                    }
+                                </span>
+                            </a>
+                            <!-- Shopping Item -->
+                            <div class="shopping-item">
+                                <div class="dropdown-cart-header">
+                                    @if (CartItem is not null)
+                                    {
+                                        <span>@totalItem Items</span>
+                                    }
+
+                                    <a href="/cart">View Cart</a>
+                                </div>
+                                <ul class="shopping-list">
+                                    @if (CartItem is not null)
+                                    {
+                                        float Item_total_price = 0;
+                                        foreach (var item in CartItem)
+                                        {
+                                            Item_total_price += float.Parse(item.Price) * (float)item.Quantity;
+                                            var itemid = item.Id;
+                                            <li>
+                                                <a @onclick="(() => RemoveFromCart(itemid))" class="remove" title="Remove this item"><i class="fa fa-remove"></i></a>
+                                                <a class="cart-img" target="_parent" href="/product/@item.Slug"><img src="@_imageService.DecodeFile(item.ImageData, item.ContentType)" style="width:70px;height:70px;" alt="#"></a>
+                                                <h4><a target="_parent" href="/product/@item.Slug">@item.Name</a></h4>
+                                                <p class="quantity">@(item.Quantity)x - <span class="amount">$@((Convert.ToDecimal(item.Price) * Convert.ToDecimal(item.Quantity)).ToString("0.##"))</span></p>
+                                            </li>
+                                        }
+
+                                        total = Item_total_price;
+                                    }
+
+
+                                </ul>
+                                <div class="bottom">
+                                    <div class="total">
+                                        <span>Total</span>
+                                        <span class="total-amount">$@total.ToString("0.##")</span>
+                                    </div>
+                                    <a href="/cart" class="btn animate">Checkout</a>
+                                </div>
+                            </div>
+                            <!--/ End Shopping Item -->
+                        </div>
+
+
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Header Inner -->
+    <div class="header-inner">
+        <div class="container">
+            <div class="cat-nav-head">
+                <div class="row">
+                    <div class="col-lg-3">
+
+                    </div>
+                    <div class="col-lg-9 col-12">
+                        <div class="menu-area">
+                            <!-- Main Menu -->
+                            <nav class="navbar navbar-expand-lg">
+                                <div class="navbar-collapse">
+                                    <div class="nav-inner">
+                                        <ul class="nav main-menu menu navbar-nav">
+                                            <li class="active"><a href="/">Home</a></li>
+                                            <li></li>
+                                            <li>
+                                                <a style="cursor:pointer;"><i class="fa fa-bars" aria-hidden="true"></i> Category</a>
+                                                <ul class="dropdown">
+                                                    @if (ListCategory is not null)
+                                                    {
+                                                        foreach (var item in ListCategory)
+                                                        {
+                                                            <li><a target="_parent" href="/category/@item.Slug">@item.Name</a></li>
+                                                        }
+                                                    }
+                                                    <li><a target="_parent" href="/all">All Item</a></li>
+                                                </ul>
+                                            </li>
+                                            <li><a href="/TrackOrders">Track Order</a></li>
+                                            <li>
+                                                <a style="cursor:pointer;">Shop<i class="ti-angle-down"></i></a>
+                                                <ul class="dropdown">
+                                                    <li><a href="/cart">Cart</a></li>
+                                                    <li><a href="/checkout">Checkout</a></li>
+                                                    <li><a href="/wishlist">Wishlist</a></li>
+                                                    <li><a href="/about">About Us</a></li>
+                                                    <li><a href="/blog">Our Blog</a></li>
+                                                </ul>
+                                            </li>
+                                            <li><a href="/contact">Contact Us</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </nav>
+                            <!--/ End Main Menu -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--/ End Header Inner -->
+</header>
+<!--/ End Header -->
+<!-- End Topbar -->
+<!-- Start Product Area -->
+<div class="product-area section">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="section-title">
+                    <h2>Our Product</h2>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="product-info">
+
+                    <div class="tab-content" id="myTabContent">
+                        <!-- Start Single Tab -->
+                        <div class="tab-pane fade show active" id="man" role="tabpanel">
+                            <div class="tab-single">
+                                <div class="row">
+                                    @if (ListItem is not null)
+                                    {
+                                        foreach (var item in ListItem)
+                                        {
+                                            var itemId = item.Id;
+                                            <div class="col-xl-3 col-lg-4 col-md-4 col-12">
+                                                <div class="single-product">
+                                                    <div class="product-img">
+                                                        <a href="product/@item.Slug">
+                                                            <img class="default-img" src="@_imageService.DecodeFile(item.ImageData, item.ContentType)" alt="#">
+                                                            @*<img class="hover-img" src="@_imageService.DecodeFile(item.ImageData, item.ContentType)" alt="#">*@
+                                                        </a>
+                                                        <div class="button-head">
+                                                            <div class="product-action">
+                                                                <a data-toggle="modal" data-target="#exampleModal-@item.Id" title="Quick View"><i class=" ti-eye"></i><span>Quick Shop</span></a>
+                                                                <a title="Wishlist" @onclick="(() => AddToWishList(itemId))"><i class=" ti-heart "></i><span>Add to Wishlist</span></a>
+                                                            </div>
+                                                            <div class="product-action-2">
+                                                                <a title="Add to cart" @onclick="(() => AddToCart(itemId))">Add to cart</a>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="product-content">
+                                                        <h3><a href="product/@item.Slug">@item.Name</a></h3>
+                                                        <div class="product-price">
+                                                            @if (item.ItemSaleOffId != ItemSaleOffId)
+                                                            {
+                                                                <span class="old">$@item.Price</span>
+                                                                <span>$@item.ListPrice(_context, item.Price, item.ItemSaleOffId)</span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span>$@item.Price</span>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- Modal -->
+                                            <div class="modal fade" id="exampleModal-@item.Id" tabindex="-1" role="dialog">
+                                                <div class="modal-dialog" role="document">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span class="ti-close" aria-hidden="true"></span></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <div class="row" style="margin-left:0px;margin-right:0px;">
+                                                                <div class="col"></div>
+                                                                <div class="col-md-6 ">
+                                                                    <h4 style="margin-top:100px;font-size:14px; font-weight:500; color:#F7941D; display:block; margin-bottom:5px;">@item.Category.Name</h4>
+                                                                    <h3 style="font-size:30px;color:#333;">
+                                                                        @item.Name
+                                                                    </h3>
+                                                                    <p style="display:block; margin-top:20px; color:#888; font-size:14px; font-weight:400;">@item.Description</p>
+                                                                    <div class="button" style="margin-top:30px;">
+                                                                        <a @onclick="(() => AddToCart(item.Id))" class="btn" style="color:#fff;">Buy Now!</a>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-4 text-center ">
+                                                                    <a href="product/@item.Slug"><img style="width:50%;height:auto;margin-top:100px;" src="@_imageService.DecodeFile(item.ImageData, item.ContentType)" alt="#"></a>
+                                                                </div>
+                                                                <div class="col"></div>
+                                                            </div>
+                                                            <br><br>
+                                                        </div>
+
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- Modal end -->
+                                        }
+                                    }
+
+
+
+                                </div>
+                            </div>
+                        </div>
+                        <!--/ End Single Tab -->
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Product Area -->
+
+<BlogPostArea></BlogPostArea>
+
+@code {
+    [Parameter]
+    public string category { get; set; }
+
+    [Parameter]
+    public string searchString { get; set; }
+
+    public Models.Category Category;
+    public List<Models.Item> ListItem;
+    public List<Models.Category> ListCategory;
+    public float total;
+
+    public int totalItem;
+    public Models.SearchProductModel searchProduct = new();
+    public List<Models.Cart> CartItem { get; set; }
+
+    public int ItemSaleOffId;
+    public int ItemStatusId;
+    public string searchActive;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ItemSaleOffId = _context.ItemSaleOff.FirstOrDefault(i => i.Name == "None").Id;
+        ItemStatusId = _context.ItemStatus.FirstOrDefault(i => i.Name == "Normal").Id;
+
+        if (category is not null)
+        {
+            Category = _context.Category.FirstOrDefault(i => i.Slug == category);
+            if (Category is not null)
+            {
+                ListItem = await _context.Item.Where(i => i.CategoryId == Category.Id)
+                    .Include(i => i.Attachments)
+                    .Include(i => i.Rates)
+                    .Include(i => i.ItemStatus)
+                    .Include(i => i.ItemSaleOff)
+                    .Include(i => i.Category).ToListAsync();
+            }
+            else
+            {
+                NavigationManager.NavigateTo("/");
+            }
+        }
+        else if (String.IsNullOrEmpty(searchString))
+        {
+            searchString = searchString.ToLower();
+            ListItem = await _context.Item.Include(i => i.Attachments)
+               .Include(i => i.Rates)
+               .Include(i => i.ItemStatus)
+               .Include(i => i.ItemSaleOff)
+               .Include(i => i.Category)
+               .Include(i => i.Comments)
+               .Where(i => i.Name.ToLower().Contains(searchString) ||
+            i.Description.ToLower().Contains(searchString) ||
+            i.Content.ToLower().Contains(searchString) ||
+            i.ItemStatus.Name.Contains(searchString) ||
+            i.Price.Contains(searchString) ||
+            i.ItemSaleOff.Name.Contains(searchString))
+               .ToListAsync();
+        }
+        else
+        {
+            ListItem = await _context.Item.Include(i => i.Attachments)
+                    .Include(i => i.Rates)
+                    .Include(i => i.ItemStatus)
+                    .Include(i => i.ItemSaleOff)
+                    .Include(i => i.Category).ToListAsync();
+        }
+        ListCategory = _context.Category.ToList();
+        GetCart();
+    }
+
+
+    public void GetCart()
+    {
+        CartItem = _context.Cart.Where(i => i.CustomUserId == _userManager.GetUserId(_httpContextAccessor.HttpContext.User) && !i.IsSold).ToList();
+    }
+
+    public async Task RemoveFromCart(int id)
+    {
+        var item = await _context.Cart.FindAsync(id);
+        _context.Cart.Remove(item);
+        _context.SaveChanges();
+        GetCart();
+        //StateHasChanged();
+
+    }
+
+
+
+    public async Task AddToCart(int id)
+    {
+        var currentItem = _context.Item.FirstOrDefault(i => i.Id == id);
+
+        var number_of_some_item = (_context.Cart
+            .Where(i => i.CustomUserId == _userManager.GetUserId(_httpContextAccessor.HttpContext.User) && !i.IsSold && i.ItemId == currentItem.Id).ToList()).Count;
+
+        if (number_of_some_item == 0)
+        {
+            Models.Cart newCart = new Models.Cart
+            {
+                Name = currentItem.Name,
+                ItemId = currentItem.Id,
+                Quantity = 1,
+                Price = currentItem.ListPrice(_context, currentItem.Price, currentItem.ItemSaleOffId),
+                CategoryId = currentItem.CategoryId,
+                CustomUserId = _userManager.GetUserId(_httpContextAccessor.HttpContext.User),
+                ImageData = currentItem.ImageData,
+                ContentType = currentItem.ContentType,
+                Slug = currentItem.Slug
+            };
+            _context.Add(newCart);
+            _context.SaveChanges();
+        }
+        else
+        {
+            var Item = await _context.Cart
+                    .Include(i => i.Category)
+                    .Include(i => i.CustomUser)
+                    .Include(i => i.Item)
+                    .FirstOrDefaultAsync(m => m.ItemId == currentItem.Id);
+
+            Item.Quantity += 1;
+            _context.Update(Item);
+            _context.SaveChanges();
+        }
+
+        GetCart();
+
+        await JSRuntime.InvokeAsync<string>("AddToCartSuccess", null);
+
+    }
+
+    public void Search()
+    {
+        NavigationManager.NavigateTo($"/search/{searchProduct.Search}", true);
+    }
+
+
+    public void OpenSearch()
+    {
+        if (searchActive is null)
+        {
+            searchActive = "active";
+        }
+        else
+        {
+            searchActive = null;
+        }
+    }
+
+    public async Task AddToWishList(int id)
+    {
+
+
+        var number_of_some_item = (_context.WishList
+            .Where(i => i.CustomUserId == _userManager.GetUserId(_httpContextAccessor.HttpContext.User) && i.ItemId == id).ToList()).Count;
+
+        if (number_of_some_item == 0)
+        {
+            var currentItem = _context.Item.FirstOrDefault(i => i.Id == id);
+
+            Models.WishList newWishList = new Models.WishList
+            {
+                Name = currentItem.Name,
+                ItemId = currentItem.Id,
+                Description = currentItem.Description,
+                ListPrice = currentItem.ListPrice(_context, currentItem.Price, currentItem.ItemSaleOffId),
+                CategoryId = currentItem.CategoryId,
+                CustomUserId = _userManager.GetUserId(_httpContextAccessor.HttpContext.User),
+                ImageData = currentItem.ImageData,
+                ContentType = currentItem.ContentType,
+                Slug = currentItem.Slug
+            };
+            _context.Add(newWishList);
+            _context.SaveChanges();
+        }
+
+
+        await JSRuntime.InvokeAsync<string>("AddItemToWishList", null);
+
+    }
+
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        await JSRuntime.InvokeAsync<string>("sliderFunctions.startSlider", null);
+        await JSRuntime.InvokeAsync<string>("mobileFunction.startFunction", null);
+    }
+}

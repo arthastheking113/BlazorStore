@@ -1,0 +1,388 @@
+﻿
+@page "/TrackOrders"
+
+@page "/Orders/TrackOrderDetails/{trackingNumber}"
+
+
+@using BlazorStore.Services
+@using BlazorStore.Data
+@using Microsoft.EntityFrameworkCore;
+@inject ApplicationDbContext _context
+@inject IImageService _imageService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+<Head>
+</Head>
+<!-- Breadcrumbs -->
+<div class="breadcrumbs">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="bread-inner">
+                    <ul class="bread-list">
+                        <li><a href="/">Home<i class="ti-arrow-right"></i></a></li>
+                        <li class="active"><a href="/TrackOrders">Track Order</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Breadcrumbs -->
+@if (trackingNumber is null)
+{
+
+
+    <div class="jumbotron text-center" style="background-color:white;">
+        <EditForm Model="trackingSearch" OnValidSubmit="SearchForOrder">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <h1 class="display-3">Track Your Order</h1>
+            <p class="lead mb-2"><strong>Please enter your Tracking Number</strong></p>
+            <div class="row">
+                <div class="col-lg-4">
+
+                </div>
+                <div class="col-lg-4">
+                    <div class="form-group">
+                        <input @bind="trackingSearch.TrackingNumber" required type="text" class="form-control" />
+                    </div>
+                </div>
+            </div>
+
+
+            <button type="submit" class="btn btn-info btn-lg">Track My Order</button>
+            <hr>
+            <p>
+                Having trouble? <a href="/contact" style="color:blue">Contact us</a>
+            </p>
+            <p class="lead">
+                <a class="btn btn-primary btn-lg  text-white" asp-controller="Items" asp-action="Index" role="button">Continue Shopping</a>
+            </p>
+        </EditForm>
+    </div>
+}
+else
+{
+    if (ListOrders is not null && ListOrders.Count == 0)
+    {
+        <div class="jumbotron text-center" style="background-color:white;">
+            <EditForm  Model="trackingSearch" OnValidSubmit="SearchForOrder">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <h1 class="display-3">Track Your Order</h1>
+                <p class="lead mb-2"><strong>Please enter your Tracking Number</strong></p>
+                <p class="lead mb-2 text-danger"><strong>* Sorry, there are no order with this tracking number. *</strong></p>
+                <div class="row">
+                    <div class="col-lg-4">
+
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="form-group">
+                            <input @bind="trackingSearch.TrackingNumber" type="text" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+
+
+                <button type="submit" class="btn btn-info btn-lg">Track My Order</button>
+                <hr>
+                <p>
+                    Having trouble? <a href="/contact" style="color:blue">Contact us</a>
+                </p>
+                <p class="lead">
+                    <a class="btn btn-primary btn-lg text-white" href="/">Continue Shopping</a>
+                </p>
+            </EditForm>
+        </div>
+    }
+    else
+    {
+
+        <AuthorizeView Roles="Administrator">
+            <Authorized>
+                <div class="shopping-cart section">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-md-4">
+
+                            </div>
+                            <div class="col-md-4">
+                                <EditForm Context="UpdateOrderStatus" Model="EditOrderStatus" OnValidSubmit="UpdateOrderStatus">
+                                    <div class="form-group">
+                                        <label>Order Status</label>
+                                        <RadzenDropDown Context="orderstatus" AllowClear="true" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" @bind-Value=@EditOrderStatus.OrderStatusId Placeholder="Select..."
+                                                        Data=@orderStatuses TextProperty="Description" ValueProperty="Id" Change=@(args => OnChange(args)) Style="width:300px">
+                                            <Template>
+                                                Status: @((orderstatus as Models.OrderStatus).Description)
+                                            </Template>
+                                        </RadzenDropDown>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Tracking Link fomr delivery service</label>
+                                        <input @bind="EditOrderStatus.TrackingLink" class="form-control" placeholder="Enter Tracking Link If You Have..." />
+                                    </div>
+                                    <button class="btn btn-block" type="submit" >Update Order</button>
+                                </EditForm>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <a class="ps-btn mb-10" href="/manage/orders">Back to List<i class="ps-icon-back"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </Authorized>
+        </AuthorizeView>
+
+
+
+
+        <!-- Shopping Cart -->
+        <div class="shopping-cart section">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h2>Track Number: @trackingNumber</h2>
+                    </div>
+                    <div class="col-md-6 text-right">
+                        <h5>Status:<i style="color:green"> @ListOrders.First().OrderStatus.Description </i></h5>
+                    </div>
+                </div>
+                <div class="row mt-2  mb-2" style="height:30px">
+                    <div class="col">
+                        <h5>Tracking Link:<i style="color:green"> @ListOrders.First().TrackingLink </i></h5>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+
+                        <!-- Shopping Summery -->
+                        <table class="table shopping-summery">
+                            <thead>
+                                <tr class="main-hading">
+                                    <th>PRODUCT</th>
+                                    <th>NAME</th>
+                                    <th class="text-center">UNIT PRICE</th>
+                                    <th class="text-center">QUANTITY</th>
+                                    <th class="text-center">TOTAL</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (ListOrders is not null)
+                                {
+                                    Item_total_price = 0;
+                                    foreach (var item in ListOrders)
+                                    {
+                                        var itemid = item.Id;
+                                        Item_total_price += float.Parse(item.Price) * (float)item.Quantity;
+                                        <tr>
+                                            <td class="image" data-title="No"><img src="@_imageService.DecodeFile(item.ImageData, item.ContentType)" style="width:100px;height:100px;" alt="#"></td>
+                                            <td class="product-des" data-title="Description">
+                                                <p class="product-name"><a href="#">@item.Name</a></p>
+                                                <p class="product-des">@item.Category.Name</p>
+                                            </td>
+                                            <td class="price" data-title="Price"><span>$@item.Price </span></td>
+                                            <td class="qty" data-title="Qty">
+                                                <!-- Input Order -->
+                                                <div class="input-group">
+
+                                                    <input type="text" disabled class="input-number" data-min="1" data-max="100" value="@item.Quantity">
+
+                                                </div>
+                                                <!--/ End Input Order -->
+                                            </td>
+                                            <td class="total-amount" data-title="Total"><span>$@((Convert.ToDecimal(item.Price) * Convert.ToDecimal(item.Quantity)).ToString("0.##"))</span></td>
+                                        </tr>
+
+                                    }
+                                    //total = (Item_total_price) * taxRate / (float)100 + Item_total_price;
+                                }
+
+
+
+
+
+                            </tbody>
+                        </table>
+                        <!--/ End Shopping Summery -->
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <!-- Total Amount -->
+                        <div class="total-amount">
+                            <div class="row">
+                                <div class="col-lg-8 col-md-5 col-12">
+                                    <div class="left">
+                                        <div class="row mb-2">
+                                            <div class="col-md-3">
+                                                <p>Full Name:</p>
+                                            </div>
+                                            <div class="col-md-7 text-left">
+                                                <p>@(ListOrders.First().FirstName) @(ListOrders.First().LastName)</p>
+                                            </div>
+                                        </div>
+                                        <div class="row mb-2">
+                                            <div class="col-md-3">
+                                                <p>Adress:</p>
+                                            </div>
+                                            <div class="col-md-7 text-left">
+                                                <p>@(ListOrders.First().Adress), @(ListOrders.First().City), @(ListOrders.First().State), @(ListOrders.First().Zipcode)</p>
+                                            </div>
+                                        </div>
+                                        <div class="row mb-2">
+                                            <div class="col-md-3">
+                                                <p>Email:</p>
+                                            </div>
+                                            <div class="col-md-7 text-left">
+                                                <p>@(ListOrders.First().Email)</p>
+                                            </div>
+                                        </div>
+                                        <div class="row mb-2">
+                                            <div class="col-md-3">
+                                                <p>Phone Number:</p>
+                                            </div>
+                                            <div class="col-md-7 text-left">
+                                                <p>@(ListOrders.First().PhoneNumber)</p>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <p>Notes:</p>
+                                            </div>
+                                            <div class="col-md-7 text-left">
+                                                <p>@(ListOrders.First().Notes)</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-4 col-md-7 col-12">
+                                    <div class="right">
+                                        <ul>
+                                            <li>Cart Subtotal<span>$@Item_total_price.ToString("0.##")</span></li>
+                                            @if (Item_total_price >= (float)40)
+                                            {
+                                                total = (Item_total_price) * taxRate / (float)100 + Item_total_price;
+                                                <li>Shipping<span>Free</span></li>
+                                                <li class="last">You Pay<span>$@total.ToString("0.##")</span></li>
+                                            }
+                                            else if (ListOrders.Count == 0)
+                                            {
+                                                <li>Shipping<span>$0.00</span></li>
+                                                <li class="last">You Pay<span>$0.00</span></li>
+                                            }
+                                            else
+                                            {
+                                                total = (Item_total_price + (float)20) * taxRate / (float)100 + (Item_total_price + (float)20);
+                                                <li>Shipping<span>$20.00</span></li>
+                                                <li class="last">You Pay<span>$@((total).ToString("0.##"))</span></li>
+                                            }
+
+                                        </ul>
+                                        <div class="button5">
+                                            <button @onclick="GoToHome" class="btn">Continue shopping</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!--/ End Total Amount -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--/ End Shopping Cart -->
+    }
+
+}
+
+
+<BlogPostArea></BlogPostArea>
+
+@code {
+    [Parameter]
+    public string trackingNumber { get; set; }
+
+
+    public List<Models.Order> ListOrders { get; set; }
+    public float total;
+    public int totalItem;
+    public string searchActive;
+
+    public float Item_total_price;
+    public float taxRate = (float)7;
+
+    public Models.TrackingSearch trackingSearch = new();
+    public List<Models.OrderStatus> orderStatuses = new();
+    public Models.UpdateOrderStatus EditOrderStatus = new();
+
+    protected override void OnInitialized()
+    {
+        if (trackingNumber is not null)
+        {
+            ListOrders = _context.Orders
+           .Where(o => o.TrackingNumber == trackingNumber)
+           .Include(o => o.Category)
+           .Include(o => o.CustomUser)
+           .Include(o => o.Item)
+           .Include(o => o.OrderStatus)
+           .ToList();
+            orderStatuses = _context.OrderStatuses.Where(o => o.Name != "Received").ToList();
+        }
+
+    }
+
+    public void GoToHome()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+
+    public void SearchForOrder()
+    {
+        //trackingNumber = TrackingSearch.TrackingNumber;
+        //ListOrders = _context.Orders
+        //  .Where(o => o.TrackingNumber == TrackingSearch.TrackingNumber)
+        //  .Include(o => o.Category)
+        //  .Include(o => o.CustomUser)
+        //  .Include(o => o.Item)
+        //  .Include(o => o.OrderStatus)
+        //  .ToList();
+        NavigationManager.NavigateTo($"/Orders/TrackOrderDetails/{trackingSearch.TrackingNumber}", true);
+    }
+
+
+    void OnChange(object value)
+    {
+        var str = value is IEnumerable<object> ? string.Join(", ", (IEnumerable<object>)value) : value;
+
+    }
+    public async Task UpdateOrderStatus()
+    {
+
+        foreach (var item in ListOrders)
+        {
+            item.OrderStatusId = EditOrderStatus.OrderStatusId;
+            _context.Update(item);
+        }
+        _context.SaveChanges();
+        ListOrders = _context.Orders
+          .Where(o => o.TrackingNumber == trackingNumber)
+          .Include(o => o.Category)
+          .Include(o => o.CustomUser)
+          .Include(o => o.Item)
+          .Include(o => o.OrderStatus)
+          .ToList();
+        
+        await JSRuntime.InvokeVoidAsync("UpdateOrderSuccess", null);
+    }
+
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        await JSRuntime.InvokeAsync<string>("sliderFunctions.startSlider", null);
+        await JSRuntime.InvokeAsync<string>("mobileFunction.startFunction", null);
+        //return base.OnAfterRenderAsync(firstRender);
+    }
+}

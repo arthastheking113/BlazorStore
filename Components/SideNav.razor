@@ -1,0 +1,162 @@
+﻿@inject NavigationManager NavigationManager
+@using Microsoft.AspNetCore.Http;
+@inject IHttpContextAccessor _httpContextAccessor
+<div class="py-4 px-3 mb-4 bg-light">
+    <div class="media d-flex align-items-center">
+        <div class="media-body">
+            <div class="media-body" id="logo-disappear">
+                <a href="/" class="m-0 "><h4>Lan's Market</h4></a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<p class="text-gray category-show font-weight-bold text-uppercase px-3 small pb-4 mb-0">Shop</p>
+
+<ul class="nav flex-column bg-white mb-0">
+
+
+    <li class="nav-item">
+        <div class="span-one-line">
+            <div class="center-icon-nav pr-3">
+                <span class="iconify" data-icon="fa-solid:edit" data-inline="true"></span>
+            </div>
+            <a href="/manage" class="nav-link text-dark font-italic pr-0 pl-0">
+
+                Manage
+            </a>
+        </div>
+    </li>
+    <li class="nav-item">
+        <div class="span-one-line">
+            <div class="center-icon-nav pr-3">
+                <span class="iconify" data-icon="fa-solid:shopping-cart" data-inline="true"></span>
+            </div>
+            <a href="/manage/orders" class="nav-link text-dark font-italic pr-0 pl-0">
+
+                Orders
+            </a>
+        </div>
+    </li>
+    <li class="nav-item">
+        <div class="span-one-line">
+            <div class="center-icon-nav pr-3">
+                <span class="iconify" data-icon="dashicons:food" data-inline="true"></span>
+            </div>
+            <a href="/manage/products" class="nav-link text-dark font-italic pr-0 pl-0">
+
+                Item
+            </a>
+        </div>
+    </li>
+    <li class="nav-item">
+        <div class="span-one-line">
+            <div class="center-icon-nav pr-3">
+                <span class="iconify" data-icon="bx:bxs-category" data-inline="true"></span>
+            </div>
+            <a href="/manage/category" class="nav-link text-dark font-italic  pr-0 pl-0">
+
+                Category
+            </a>
+        </div>
+
+    </li>
+    <li class="nav-item">
+        <div class="span-one-line">
+            <div class="center-icon-nav pr-3">
+                <span class="iconify" data-icon="fluent:status-16-filled" data-inline="true"></span>
+            </div>
+            <a href="/manage/itemstatus" class="nav-link text-dark font-italic pr-0 pl-0">
+
+                Item Status
+            </a>
+        </div>
+
+    </li>
+    <li class="nav-item">
+        <div class="span-one-line">
+            <div class="center-icon-nav pr-3">
+                <span class="iconify " data-icon="ps:sale-tag" data-inline="true"></span>
+            </div>
+            <a href="/manage/itemsaleoff" class="nav-link text-dark font-italic pr-0 pl-0">
+
+                Item Sale Off
+            </a>
+        </div>
+
+    </li>
+</ul>
+
+<p class="text-gray  category-show font-weight-bold text-uppercase px-3 small py-4 mb-0">Blog</p>
+
+<ul class="nav flex-column bg-white mb-0">
+
+    <li class="nav-item">
+        <div class="span-one-line">
+            <div class="center-icon-nav pr-3">
+                <span class="iconify" data-icon="fa:bars" data-inline="true"></span>
+            </div>
+            <a href="/manage/blogcategory" class="nav-link text-dark font-italic  pr-0 pl-0">
+
+                Blog Category
+            </a>
+        </div>
+
+    </li>
+    <li class="nav-item">
+        <div class="span-one-line">
+            <div class="center-icon-nav pr-3">
+                <span class="iconify" data-icon="carbon:blog" data-inline="true"></span>
+            </div>
+            <a href="/manage/blogpost" class="nav-link text-dark font-italic pr-0 pl-0">
+
+                Blog Post
+            </a>
+        </div>
+
+    </li>
+    <li class="nav-item">
+        <div class="span-one-line">
+            <div class="center-icon-nav pr-3">
+                <span class="iconify" data-icon="el:tag" data-inline="true"></span>
+            </div>
+            <a href="/manage/tag" class="nav-link text-dark font-italic pr-0 pl-0">
+
+                Blog Tag
+            </a>
+        </div>
+
+    </li>
+
+</ul>
+
+<!-- Vertical navbar -->
+<!-- End vertical navbar -->
+@code {
+    public string active;
+
+    public void NavToggle()
+    {
+        if (active is null)
+        {
+            active = "active";
+        }
+        else
+        {
+            active = null;
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (!_httpContextAccessor.HttpContext.User.IsInRole("Administrator"))
+        {
+            NavigationManager.NavigateTo("/");
+        }
+    }
+}

@@ -1,0 +1,117 @@
+﻿@page
+@model LoginModel
+
+@{
+    ViewData["Title"] = "Log in";
+}
+<br /><br />
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-2"></div>
+        <div class="col-md-8">
+            <div class="row">
+                <div class="col-md-6">
+                    <a class="nav-link" asp-area="Identity" asp-page="/Account/Login"><h2 class="text-center" style="color:#1cd5db">Login</h2></a>
+                </div>
+                <div class="col-md-6">
+                    <a class="nav-link" asp-area="Identity" asp-page="/Account/Register"><h2 style="color:darkgrey" class="text-center">Register</h2></a>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <form id="account" method="post">
+                        <hr />
+                        <div asp-validation-summary="All" class="text-danger"></div>
+                        <div class="form-group">
+                            <label asp-for="Input.Email"></label>
+                            <input asp-for="Input.Email" class="form-control" />
+                            <span asp-validation-for="Input.Email" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Input.Password"></label>
+                            <input asp-for="Input.Password" class="form-control" />
+                            <span asp-validation-for="Input.Password" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <button class=" btn-lg btn btn-block" style="background-color:#1cd5db;font-size: 14px;font-weight: 800;letter-spacing: 1px;text-transform: uppercase;border-radius: 0;font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;color:white;" type="submit">Login</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+           
+            <hr />
+            <div class="form-group">
+                @{
+                    if ((Model.ExternalLogins?.Count ?? 0) == 0)
+                    {
+                        <div>
+                            <p>
+                                There are no external authentication services configured at the moment.
+                            </p>
+                        </div>
+                    }
+                    else
+                    {
+                        <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="form-horizontal">
+
+                            <div class="socials text-center">
+                                <div class="row">
+                                    <div class="col" style="padding-right:35px;"></div>
+                                    <div class="col-6">
+                                        <ul>
+                                            <p class="text-center" style="padding-right:20px;">Or using other methods </p>
+                                            @foreach (var provider in Model.ExternalLogins)
+                                            {
+                                                switch (provider.Name)
+                                                {
+                                                    case "GitHub":
+                                                        <li style="padding-right:10px; padding-bottom:20px;"><button style="border:none;" type="submit" class="ico-circle" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account"><i class="fa fa-github"></i></button></li>
+                                                        break;
+                                                    case "Google":
+                                                        <li style="padding-right:10px; padding-bottom:20px;"><button style="border:none;" type="submit" class="ico-circle" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account"><i class="fa fa-google"></i></button></li>
+                                                        break;
+                                                    case "Twitter":
+                                                        <li style="padding-right:10px; padding-bottom:20px;"><button style="border:none;" type="submit" class="ico-circle" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account"><i class="fa fa-twitter"></i></button></li>
+                                                        break;
+                                                    case "Facebook":
+                                                        <li style="padding-right:10px; padding-bottom:20px;"><button style="border:none;" type="submit" class="ico-circle" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account"><i class="fa fa-facebook"></i></button></li>
+                                                        break;
+                                                }
+                                            }
+                                        </ul>
+                                    </div>
+                                    <div class="col"></div>
+                                </div>
+                            </div>
+                        </form>
+                    }
+                }
+            </div>
+            <div class="form-group">
+                <p>
+                    <a style="text-decoration: initial;" id="forgot-password" asp-page="./ForgotPassword">Forgot your password?</a>
+                </p>
+                <p>
+                    <a style="text-decoration: initial;" asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Register as a new user</a>
+                </p>
+                <p>
+                    <a style="text-decoration: initial;" id="resend-confirmation" asp-page="./ResendEmailConfirmation">Resend email confirmation</a>
+                </p>
+            </div>
+        </div>
+        <div class="col-md-2"></div>
+    </div>
+</div>
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

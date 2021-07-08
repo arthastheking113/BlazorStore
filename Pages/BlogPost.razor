@@ -1,0 +1,207 @@
+﻿@page "/post/details/{slug}"
+
+
+@using Microsoft.EntityFrameworkCore
+@using BlazorStore.Data
+@inject ApplicationDbContext _context
+@using BlazorStore.Services
+@inject IImageService _imageService
+@using Microsoft.AspNetCore.Identity
+@using BlazorStore.Models
+@inject SignInManager<CustomUser> SignInManager
+@inject UserManager<CustomUser> _userManager
+@using Microsoft.AspNetCore.Http;
+@inject IHttpContextAccessor _httpContextAccessor
+@inject IImageService _imageService
+@inject IJSRuntime JSRuntime
+<Head>
+</Head>
+
+<!-- Breadcrumbs -->
+<div class="breadcrumbs">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="bread-inner">
+                    <ul class="bread-list">
+                        <li><a href="/">Home<i class="ti-arrow-right"></i></a></li>
+                        <li class="active"><a href="/blog">Blog</a><i class="ti-arrow-right"></i><a href="/post/details/@currentPost.Slug">@currentPost.Title</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Breadcrumbs -->
+<!-- Start Blog Single -->
+<section class="blog-single section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-12">
+                <div class="blog-single-main">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="image">
+                                <img src="@_imageService.DecodeFileBlogPost(currentPost.ImageData, currentPost.ContentType)" alt="#">
+                            </div>
+                            <div class="blog-detail mt-3" style="background-color:#ffffff;">
+                                <h2 class="blog-title">@currentPost.Title</h2>
+                                <div class="blog-meta">
+                                    <span class="author"><a target="_blank" href="https://duylanle-portfolio.netlify.app/"><i class="fa fa-user"></i>By Duy Lan Le</a><a><i class="fa fa-calendar"></i>@currentPost.CreateDate</a><a><i class="fa fa-comments"></i>Comment (@currentPost.PostComments.Count)</a></span>
+                                </div>
+                                <div class="content">
+                                    @((MarkupString)currentPost.Content)
+                                </div>
+                            </div>
+                            <div class="share-social">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="content-tags">
+                                            <h4>Tag:</h4>
+                                            <ul class="tag-inner">
+
+                                                @if (currentPost.BlogTags is not null)
+                                                {
+                                                    foreach (var item in currentPost.BlogTags)
+                                                    {
+                                                        <li><a href="#">@item.TagName</a></li>
+                                                    }
+                                                }
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <br />
+                            <hr />
+                        </div>
+
+                        <div class="col-12">
+
+                            <div class="comments">
+                                <h3 class="comment-title">Comments (@currentPost.PostComments.Count)</h3>
+
+                                @if (Comments is not null)
+                                {
+                                    foreach (var item in Comments)
+                                    {
+                                        <!-- Single Comment -->
+                                        <div class="single-comment">
+                                            <img src="https://via.placeholder.com/80x80" alt="#">
+                                            <div class="content">
+                                                <h4>@item.CustomUser.FullName <span>@item.CommentDate</span></h4>
+                                                <p>@item.Content</p>
+                                                @*<div class="button">
+                                                        <a href="#" class="btn"><i class="fa fa-reply" aria-hidden="true"></i>Reply</a>
+                                                    </div>*@
+                                            </div>
+                                        </div>
+                                        <!-- End Single Comment -->
+                                    }
+                                }
+
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <hr />
+                            <div class="reply">
+                                <div class="reply-head">
+                                    <h2 class="reply-title">Leave a Comment</h2>
+                                    <!-- Comment Form -->
+                                    <EditForm class="form" Model="PostCommentToDataBase" OnValidSubmit="CreateAsync">
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <div class="form-group">
+                                                    <label>Your Message<span>*</span></label>
+                                                    <textarea @bind="PostCommentToDataBase.Content" placeholder=""></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="col-12">
+                                                <div class="form-group button">
+                                                    <button type="submit" class="btn btn-secondary text-white">Post comment</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </EditForm>
+                                    <!-- End Comment Form -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-12">
+                <div class="main-sidebar" style="padding-right:20px;padding-left:20px">
+                    <CategoryRightNav></CategoryRightNav>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!--/ End Blog Single -->
+@code {
+    [Parameter]
+    public string slug { get; set; }
+
+    public Models.BlogPost currentPost = new();
+    private List<Models.BlogComment> Comments = new();
+    private Models.CustomUser User;
+    public Models.BlogComment PostCommentToDataBase = new();
+
+
+    protected override void OnInitialized()
+    {
+        StateHasChanged();
+        GetPost();
+        GetComment();
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        //StateHasChanged();
+
+        if (firstRender)
+        {
+
+        }
+    }
+
+
+    public void GetPost()
+    {
+        currentPost = _context.PostCategory
+     .Include(p => p.BlogCategory)
+     .Include(m => m.PostComments)
+     .Include(t => t.BlogTags)
+     .FirstOrDefault(m => m.Slug == slug);
+        currentPost.ViewCount += 1;
+        _context.Update(currentPost);
+        _context.SaveChanges();
+    }
+
+
+
+    private async Task CreateAsync()
+    {
+
+        User = await _userManager.GetUserAsync(_httpContextAccessor.HttpContext.User);
+        PostCommentToDataBase.CommentDate = DateTime.Now;
+        PostCommentToDataBase.Update = PostCommentToDataBase.CommentDate;
+        PostCommentToDataBase.CustomUserId = User.Id;
+        PostCommentToDataBase.PostCategoryId = currentPost.Id;
+        _context.Add(PostCommentToDataBase);
+        _context.SaveChanges();
+        GetComment();
+        await JSRuntime.InvokeAsync<string>("AddingCommentSuccess", null);
+        PostCommentToDataBase = new();
+
+    }
+
+    private void GetComment()
+    {
+        Comments = _context.PostComment.Include(c => c.CustomUser).Where(c => c.PostCategoryId == currentPost.Id).ToList();
+    }
+
+}

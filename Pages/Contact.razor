@@ -1,0 +1,176 @@
+﻿@page "/contact"
+@inject IJSRuntime JSRuntime
+@using Microsoft.AspNetCore.Identity.UI.Services
+@inject IEmailSender _emailSender
+@using Microsoft.AspNetCore.Http;
+@inject IHttpContextAccessor _httpContextAccessor
+@using Microsoft.AspNetCore.Identity
+@using BlazorStore.Models
+@inject SignInManager<CustomUser> _signInManager
+@inject UserManager<CustomUser> _userManager
+
+<Head>
+</Head>
+
+<!-- Breadcrumbs -->
+<div class="breadcrumbs">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="bread-inner">
+                    <ul class="bread-list">
+                        <li><a href="/">Home<i class="ti-arrow-right"></i></a></li>
+                        <li class="active"><a href="/contact">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Breadcrumbs -->
+<!-- Start Contact -->
+<section id="contact-us" class="contact-us section">
+    <div class="container">
+        <div class="contact-head">
+            <div class="row">
+                <div class="col-lg-8 col-12">
+                    @if (IsSent)
+                    {
+                        <div class="form-main">
+                            <div class="jumbotron text-center" style="background-color:white;">
+                                <h1 class="display-3">Thank You!</h1>
+                                <p class="lead"><strong>You just successfully sent me a message!</strong></p>
+                                <br />
+                                <hr>
+                                <br />
+                                <p>
+                                    Having trouble? <a asp-controller="Home" asp-action="Contact">Contact us</a>
+                                </p>
+                                <p class="lead">
+                                    <a class="btn btn-primary btn-lg text-white" href="/">Continue Shopping</a>
+                                </p>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="form-main">
+                            <div class="title">
+                                <h4>Get in touch</h4>
+                                <h3>Write us a message</h3>
+                            </div>
+                            <EditForm class="form" Model="newContactForm" OnValidSubmit="SendMessage">
+                                <DataAnnotationsValidator />
+                                <ValidationSummary />
+                                <div class="row">
+                                    <div class="col-lg-6 col-12">
+                                        <div class="form-group">
+                                            <label>First Name<span>*</span></label>
+                                            <input @bind="newContactForm.FirstName" type="text" placeholder="">
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6 col-12">
+                                        <div class="form-group">
+                                            <label>Last Name<span>*</span></label>
+                                            <input @bind="newContactForm.LastName" type="text" placeholder="">
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6 col-12">
+                                        <div class="form-group">
+                                            <label>Your Subjects<span>*</span></label>
+                                            <input @bind="newContactForm.Subject" placeholder="">
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6 col-12">
+                                        <div class="form-group">
+                                            <label>Your Email<span>*</span></label>
+                                            <input @bind="newContactForm.Email" placeholder="">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <div class="form-group message">
+                                            <label>Message<span>*</span></label>
+                                            <textarea @bind="newContactForm.Message" placeholder=""></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="form-group button">
+                                            <button type="submit" class="btn ">Send Message</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </EditForm>
+                        </div>
+                    }
+
+
+                </div>
+                <div class="col-lg-4 col-12">
+                    <div class="single-head">
+                        <div class="single-info">
+                            <i class="fa fa-phone"></i>
+                            <h4 class="title">Call us Now:</h4>
+                            <ul>
+                                <li>+1 (402) 304-0329</li>
+                            </ul>
+                        </div>
+                        <div class="single-info">
+                            <i class="fa fa-envelope-open"></i>
+                            <h4 class="title">Email:</h4>
+                            <ul>
+                                <li><a href="mailto:arthastheking113@gmail.com">arthastheking113@gmail.com</a></li>
+                            </ul>
+                        </div>
+                        <div class="single-info">
+                            <i class="fa fa-location-arrow"></i>
+                            <h4 class="title">Our Address:</h4>
+                            <ul>
+                                <li>Washington DC, Maryland</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!--/ End Contact -->
+
+<BlogPostArea></BlogPostArea>
+@code {
+
+    public Models.ContactForm newContactForm = new();
+    public bool IsSent;
+
+
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        await JSRuntime.InvokeAsync<string>("sliderFunctions.startSlider", null);
+        await JSRuntime.InvokeAsync<string>("mobileFunction.startFunction", null);
+        //return base.OnAfterRenderAsync(firstRender);
+    }
+
+    public async Task SendMessage()
+    {
+        string myEmail = "arthastheking113@gmail.com";
+
+        string subject = $"{newContactForm.FirstName} {newContactForm.LastName} Just Send You A Message About {newContactForm.Subject}";
+
+        string body = $"Message From {newContactForm.Email}: {newContactForm.Message}";
+
+        string customberSubject = $"I Just Received A Message From Lan's Blog With Name {newContactForm.FirstName} {newContactForm.LastName} About {newContactForm.Subject}";
+        string customberBody = $"I Received Message From {newContactForm.Email} About: {newContactForm.Subject}. I will contact back to you as soon as possible.";
+
+        await _emailSender.SendEmailAsync(myEmail, subject, body);
+
+        await _emailSender.SendEmailAsync(newContactForm.Email, customberSubject, customberBody);
+
+
+        newContactForm = new();
+        IsSent = true;
+    }
+
+
+}

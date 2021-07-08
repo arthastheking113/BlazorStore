@@ -1,0 +1,33 @@
+﻿@using Microsoft.AspNetCore.Identity;
+@using BlazorStore.Models;
+@inject NavigationManager UriHelper
+@inject SignInManager<CustomUser>  _signInManager
+@inject UserManager<CustomUser> _userManager
+
+<AuthorizeView Roles="TemporaryUser">
+    <Authorized>
+
+        <li><a href="Identity/Account/register"><span style="color:#F7941D;" class="iconify" data-icon="fluent:arrow-bounce-16-filled" data-inline="true"></span> Register</a></li>
+        <li><a href="Identity/Account/Login"><span style="color:#F7941D;" class="iconify" data-icon="ion:log-in" data-inline="true"></span> Login</a></li>
+    </Authorized>
+</AuthorizeView>
+<AuthorizeView Roles="NormalUser">
+    <Authorized>
+
+        <li><i class="ti-user"></i>  <a href="Identity/Account/Manage">Manage Account</a></li>
+        <li><i class="ti-power-off"></i> <a style="cursor:pointer;" onclick="logoutfromaccount()">Log out</a></li>
+        <form action="Identity/Account/LogOut" id="logoutform">
+        </form>
+    </Authorized>
+
+</AuthorizeView>
+<AuthorizeView Roles="Administrator">
+    <Authorized>
+        <li><a href="/manage"><span class="iconify" style="color:#f7941d;" data-icon="whh:managedhosting" data-inline="true"></span> Manage</a></li>
+        <li><i class="ti-user"></i>  <a href="Identity/Account/Manage">Manage Account</a></li>
+        <li><i class="ti-power-off"></i> <a style="cursor:pointer;" onclick="logoutfromaccount()">Log out</a></li>
+        <form action="Identity/Account/LogOut" id="logoutform">
+        </form>
+
+    </Authorized>
+</AuthorizeView>

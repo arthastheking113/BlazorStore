@@ -1,0 +1,75 @@
+﻿@using BlazorStore.Models
+@using BlazorStore.Data
+@using Microsoft.EntityFrameworkCore
+@inject ApplicationDbContext _context
+@using BlazorStore.Services
+@inject IImageService _imageService
+
+<!-- Start Shop Blog  -->
+<section class="shop-blog section">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="section-title">
+                    <h2>From Our Blog</h2>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+
+            @if (PostList is not null)
+            {
+                foreach (var item in PostList)
+                {
+                    <div class="col-lg-4 col-md-6 col-12">
+                        <!-- Start Single Blog  -->
+                        <div class="shop-single-blog">
+                            <a href="/post/details/@item.Slug"><img src="@_imageService.DecodeFileBlogPost(item.ImageData,item.ContentType)" style="width:370px;height:250px" alt="#"></a>
+                            <div class="content">
+                                <p class="date">@item.CreateDate</p>
+                                <a href="/post/details/@item.Slug" class="title">@item.Title</a>
+                                <a href="/post/details/@item.Slug" class="more-btn">Continue Reading</a>
+                            </div>
+                        </div>
+                        <!-- End Single Blog  -->
+                    </div>
+                }
+            }
+
+        </div>
+    </div>
+</section>
+<!-- End Shop Blog  -->
+@code {
+    public List<Models.BlogPost> PostList = new();
+
+    protected override void OnInitialized()
+    {
+        GetData();
+    }
+
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        //if (!firstRender)
+        //{
+        //    GetData();
+        //}
+    }
+
+
+    public void GetData()
+    {
+        Random rnd = new Random();
+        var allPost = _context.PostCategory.Include(p => p.PostComments).ToList();
+        if (allPost.Count >= 3)
+        {
+            PostList = allPost.OrderBy(_ => rnd.Next()).Take(3).ToList();
+        }
+        else
+        {
+            PostList = allPost.ToList();
+        }
+
+    }
+}

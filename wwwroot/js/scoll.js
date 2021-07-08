@@ -1,0 +1,9 @@
+
+function scollToTop() {
+  
+
+    $(window).scrollTop();
+
+  
+}
+

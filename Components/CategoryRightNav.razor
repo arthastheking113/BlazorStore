@@ -1,0 +1,106 @@
+﻿@using BlazorStore.Models
+@using BlazorStore.Data
+@using Microsoft.EntityFrameworkCore 
+@inject ApplicationDbContext _context   
+@using BlazorStore.Services
+@inject IImageService _imageService 
+
+
+      <!-- Single Widget -->
+<div class="single-widget search">
+    <div class="form">
+        <input type="email" placeholder="Search Here...">
+        <a class="button" href="#"><i class="fa fa-search"></i></a>
+    </div>
+</div>
+<!--/ End Single Widget -->
+<!-- Single Widget -->
+<div class="single-widget category">
+    <h3 class="title">Blog Categories</h3>
+    <ul class="categor-list">
+
+
+
+
+        @if (CategoryList is not null)
+        {
+            foreach (var item in CategoryList)
+            {
+                <li><a href="#">@item.Name</a></li>
+            }
+        }
+    </ul>
+</div>
+<!--/ End Single Widget -->
+<!-- Single Widget -->
+<div class="single-widget recent-post">
+    <h3 class="title">Recent post</h3>
+    @if (PostList is not null)
+    {
+        foreach (var item in PostList)
+        {
+            <!-- Single Post -->
+            <div class="p-2 pl-3 single-post">
+                <div class="image">
+                    <a target="_parent" href="/post/details/@item.Slug"><img src="@_imageService.DecodeFileBlogPost(item.ImageData,item.ContentType)" style="width:100px;height:50px;" alt="#"></a>
+                </div>
+                <div class="content">
+                    <h5><a target="_parent" href="/post/details/@item.Slug">@item.Title</a></h5>
+                    <ul class="comment">
+                        <li><i class="fa fa-calendar" aria-hidden="true"></i>@item.CreateDate.ToString("MMMM/dd/yyyy")</li>
+                        <li><i class="fa fa-commenting-o" aria-hidden="true"></i>@item.PostComments.Count</li>
+                    </ul>
+                </div>
+            </div>
+            <!-- End Single Post -->
+        }
+    }
+
+
+</div>
+<!--/ End Single Widget -->
+<!-- Single Widget -->
+<!--/ End Single Widget -->
+<!-- Single Widget -->
+<div class="single-widget side-tags">
+    <h3 class="title">Tags</h3>
+    <ul class="tag">
+        @if (TagList is not null)
+        {
+            foreach (var item in TagList)
+            {
+                <li><a >@item.TagName</a></li>
+            }
+        }
+
+
+    </ul>
+</div>
+<!--/ End Single Widget -->
+@code {
+    public List<Models.BlogCategory> CategoryList = new();
+    public List<Models.BlogPost> PostList = new();
+    public List<Models.BlogTag> TagList = new();
+
+    protected override void OnInitialized()
+    {
+        GetData();
+    }
+
+    public void GetData()
+    {
+        CategoryList = _context.BlogCategory.ToList();
+        Random rnd = new Random();
+        var allPost = _context.PostCategory.Include(p => p.PostComments).ToList();
+        if (allPost.Count >= 4)
+        {
+            PostList = allPost.OrderBy(_ => rnd.Next()).Take(4).ToList();
+        }
+        else
+        {
+            PostList = allPost.ToList();
+        }
+
+        TagList = _context.BlogTag.ToList();
+    }
+}

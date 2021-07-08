@@ -1,0 +1,18 @@
+﻿
+@{
+    ViewData["Title"] = "Success";
+    var TrackingNumber = (string)ViewBag.TrackingNumber;
+}
+
+<div class="jumbotron text-center" style="background-color:white;">
+    <h1 class="display-3">Thank You!</h1>
+    <p class="lead"><strong>Your Order Have Been Placed!</strong></p>
+    <p class="lead">Your Tracking Number is: <strong>@TrackingNumber</strong></p>
+    <hr>
+    <p>
+        Having trouble? <a asp-controller="Home" asp-action="Contact">Contact us</a>
+    </p>
+    <p class="lead">
+        <a class="btn btn-primary btn-lg" asp-controller="Home" asp-action="Index" role="button">Continue Shopping</a>
+    </p>
+</div>

@@ -1,0 +1,105 @@
+﻿@page "/wishlist"
+@using BlazorStore.Services
+@using BlazorStore.Data
+@using Microsoft.AspNetCore.Identity
+@using BlazorStore.Models
+@using Microsoft.AspNetCore.Http;
+@using Microsoft.EntityFrameworkCore
+@inject IHttpContextAccessor _httpContextAccessor
+@inject UserManager<CustomUser> _userManager
+@inject IImageService _imageService
+@inject ApplicationDbContext _context
+<Head>
+</Head>
+
+<!-- Breadcrumbs -->
+<div class="breadcrumbs">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="bread-inner">
+                    <ul class="bread-list">
+                        <li><a href="/">Home<i class="ti-arrow-right"></i></a></li>
+                        <li class="active"><a href="/cart">Cart</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Breadcrumbs -->
+<!-- Shopping Cart -->
+<div class="shopping-cart section">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <!-- Shopping Summery -->
+                <table class="table shopping-summery">
+                    <thead>
+                        <tr class="main-hading">
+                            <th>PRODUCT</th>
+                            <th>NAME</th>
+                            <th class="text-center">UNIT PRICE</th>
+                            <th class="text-center"><i class="ti-trash remove-icon"></i></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (wishList is not null)
+                        {
+                            foreach (var item in wishList)
+                            {
+                                var itemid = item.Id;
+                                <tr>
+                                    <td class="image" data-title="No"><a href="/product/@item.Slug"><img src="@_imageService.DecodeFile(item.ImageData, item.ContentType)" style="width:100px;height:100px;" alt="#"></a></td>
+                                    <td class="product-des" data-title="Description">
+                                        <p class="product-name"><a href="/product/@item.Slug">@item.Name</a></p>
+                                        <p class="product-des">@item.Category.Name</p>
+                                    </td>
+                                    <td class="price" data-title="Price"><span>$@item.ListPrice </span></td>
+
+                                    <td class="action" data-title="Remove"><a style="cursor: pointer;" @onclick="(() => RemoveFromWishList(itemid))"><i class="ti-trash remove-icon"></i></a></td>
+                                </tr>
+
+                            }
+                        }
+
+
+
+
+
+                    </tbody>
+                </table>
+                <!--/ End Shopping Summery -->
+            </div>
+        </div>
+
+    </div>
+</div>
+<!--/ End Shopping Cart -->
+@code {
+    [Parameter]
+    public List<Models.WishList> wishList { get; set; }
+
+
+    protected override void OnInitialized()
+    {
+        GetWishList();
+    }
+
+    public void GetWishList()
+    {
+        wishList = _context.WishList
+       .Where(i => i.CustomUserId == _userManager.GetUserId(_httpContextAccessor.HttpContext.User))
+       .Include(i => i.Category)
+       .OrderBy(i => i.Name)
+       .ToList();
+    }
+
+    public async Task RemoveFromWishList(int id)
+    {
+        var item = await _context.WishList.FindAsync(id);
+        _context.WishList.Remove(item);
+        _context.SaveChanges();
+        GetWishList();
+    }
+}

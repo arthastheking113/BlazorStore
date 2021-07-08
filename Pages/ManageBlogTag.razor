@@ -1,0 +1,424 @@
+﻿@page "/manage/tag"
+
+@using BlazorStore.Models
+@using Microsoft.EntityFrameworkCore
+@using BlazorStore.Data
+@inject IJSRuntime JSRuntime
+@inject ApplicationDbContext _context
+@using BlazorStore.Services
+@inject IImageService _imageService
+@inject ISlugService _slugService
+
+
+<div class="vertical-nav bg-white @active" id="sidebar">
+    <SideNav></SideNav>
+</div>
+
+<!-- Page content holder -->
+<div class="page-content pr-3 pl-3 pb-5 pt-0 mb-5  @active" id="content">
+
+    <div class="container-fluid">
+        <!-- Demo content -->
+        <p class="lead">Admin System Management</p>
+
+        <div class="separator"></div>
+
+        <!--Begin Content-->
+
+        @if (itemList is not null)
+        {
+
+            <div class="row">
+                <div class="col-5">
+                    <button class="btn btn-secondary text-white mb-4" @onclick="@(() => _dialog.Open())">Create new Item</button>
+                    <br /><br />
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover display responsive nowrap" cellspacing="0" id="categoryBlogTable">
+                            <thead>
+                                <tr>
+                                    <th>Id</th>
+                                    <th>Name</th>
+                                    <th>Adjustment</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in itemList)
+                                {
+                                    var tagId = item.Id;
+                                    <tr>
+                                        <td>@item.Id</td>
+                                        <td>@item.TagName</td>
+                                        <td>
+                                            <a class="btn btn-primary text-white" style="cursor:pointer" @onclick="@(() => OpenEditDialog(tagId))">
+                                                Edit
+                                            </a>
+                                            <a class="btn btn-danger text-white" style="cursor:pointer" @onclick="() => OpenDeleteDialog(tagId)">
+                                                Delete
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                    <th>Adjustment</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                </div>
+            
+            </div>
+        }
+        else
+        {
+            <div class="row">
+                <div class="col">
+                    <p>There is no item.</p>
+                </div>
+            </div>
+        }
+
+        <!--End Content-->
+    </div>
+    <br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+    <br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+
+</div>
+<!-- End demo content -->
+
+<ModalDialog @ref="_dialog"
+             OverlayOpacity="@(_overlayOpacity)"
+             Width="@_modalWitdth"
+             CloseOnOverlayClick="_modalCloseOnClick"
+             CloseOnEscapeKey="_modalCloseOnEsc"
+             Focus="_modalFocus"
+             Animate="_modalAnimate"
+             Centered="_modalCentered"
+             ShowCloseButton="_modalShowClose">
+    <Header>
+        @*If you want to hide Header remove the whole Header definition and set ShowCloseButton="false"*@
+        <h4>Add New Tag</h4>
+    </Header>
+    <Content>
+        <div class="container">
+            <div class="row pb-2">
+                <div class="col">
+                    <EditForm Model="newBlogCategory" OnValidSubmit="Add">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="row">
+                            <div class="col">
+                                <div class="row">
+                                    <div class="col">
+                                        <p>Name</p>
+                                        <input class="form-control" @bind="newBlogCategory.TagName" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <hr />
+                        <div class="row">
+                            <div class="col text-center">
+                                <button type="submit" class="btn btn-primary btn-block">Add New Tag</button>
+                            </div>
+                        </div>
+                        <br />
+                    </EditForm>
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-secondary btn-block" @onclick="CancelDialog">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Content>
+
+</ModalDialog>
+
+
+@* Edit and Delete Modal*@
+
+<ModalDialog @ref="_dialogEdit"
+             OverlayOpacity="@(_overlayOpacity)"
+             Width="@_modalWitdth"
+             CloseOnOverlayClick="_modalCloseOnClick"
+             CloseOnEscapeKey="_modalCloseOnEsc"
+             Focus="_modalFocus"
+             Animate="_modalAnimate"
+             Centered="_modalCentered"
+             ShowCloseButton="_modalShowClose">
+    <Header>
+        @*If you want to hide Header remove the whole Header definition and set ShowCloseButton="false"*@
+        <h4>Edit Tag</h4>
+    </Header>
+    <Content>
+        <div class="container">
+            <div class="row pb-2">
+                <div class="col">
+                    <EditForm Model="currentCategory" OnValidSubmit="Edit">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="row">
+                            <div class="col">
+                                <div class="row">
+                                    <div class="col">
+                                        <p>Name</p>
+                                        <input class="form-control" @bind="currentCategory.TagName" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <hr />
+                        <div class="row">
+                            <div class="col text-center">
+                                <button type="submit" class="btn btn-primary btn-block">Accept Changes</button>
+                            </div>
+                        </div>
+                        <br />
+                    </EditForm>
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-secondary btn-block" @onclick="CancelEditDialog">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Content>
+
+</ModalDialog>
+
+
+
+@*Delete modal*@
+<ModalDialog @ref="_dialogDelete"
+             OverlayOpacity="@(_overlayOpacity)"
+             Width="@_modalWitdth"
+             CloseOnOverlayClick="_modalCloseOnClick"
+             CloseOnEscapeKey="_modalCloseOnEsc"
+             Focus="_modalFocus"
+             Animate="_modalAnimate"
+             Centered="_modalCentered"
+             ShowCloseButton="_modalShowClose">
+    <Header>
+        @*If you want to hide Header remove the whole Header definition and set ShowCloseButton="false"*@
+        <h4>Delete Tag</h4>
+    </Header>
+    <Content>
+        <div class="container">
+            <div class="row pb-2">
+                <div class="col">
+                    <EditForm Model="currentCategory" OnValidSubmit="Delete">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+                        <div class="row">
+                            <div class="col text-center">
+                                <p>Are You Sure You Want To Delete This Tag?</p>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="row">
+                                    <div class="col">
+                                        <p>Id</p>
+                                        <input readonly class="form-control" @bind="currentCategory.Id" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="row">
+                                    <div class="col">
+                                        <p>Name</p>
+                                        <input readonly class="form-control" @bind="currentCategory.TagName" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <hr />
+                        <div class="row">
+                            <div class="col text-center">
+                                <button type="submit" class="btn btn-primary btn-block">Delete Tag</button>
+                            </div>
+                        </div>
+                        <br />
+                    </EditForm>
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-secondary btn-block" @onclick="CancelDeleteDialog">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Content>
+
+</ModalDialog>
+
+
+
+
+
+
+
+@code {
+
+    public string active;
+
+    public void NavToggle()
+    {
+        if (active is null)
+        {
+            active = "active";
+        }
+        else
+        {
+            active = null;
+        }
+    }
+
+    //Fully customized dialog
+    private double _overlayOpacity = 0.3;
+    private double _modalWitdth = 800;
+    private bool _modalAnimate = true;
+    private bool _modalCloseOnClick = true;
+    private bool _modalCloseOnEsc = true;
+    private bool _modalFocus = true;
+    private bool _modalCentered = true;
+    private bool _modalShowClose = true;
+
+    private ModalDialog _dialog;
+    private ModalDialog _dialogEdit;
+    private ModalDialog _dialogDelete;
+    public Models.BlogTag currentCategory = new();
+    public Models.BlogTag tempCategory = new();
+    public string CategoryName;
+    private async Task OpenEditDialog(int Id)
+    {
+        currentCategory = _context.BlogTag.FirstOrDefault(b => b.Id == Id);
+
+
+        await _dialogEdit.Open();
+    }
+    private async Task OpenDeleteDialog(int Id)
+    {
+        currentCategory = _context.BlogTag.FirstOrDefault(b => b.Id == Id);
+        tempCategory = currentCategory;
+        await _dialogDelete.Open();
+    }
+    private async Task OpenDialog()
+    {
+        newBlogCategory = new();
+        await _dialog.Open();
+    }
+
+    private async Task AcceptDialog()
+    {
+        //Dialog accepted code
+        await _dialog.Close();
+    }
+    private async Task CancelDialog()
+    {
+        currentCategory = new();
+        //Dialog cancelled code
+        await _dialog.Close();
+    }
+    private async Task CancelEditDialog()
+    {
+        currentCategory = new();
+        //Dialog cancelled code
+        await _dialogEdit.Close();
+    }
+    private async Task CancelDeleteDialog()
+    {
+        currentCategory = new();
+        //Dialog cancelled code
+        await _dialogDelete.Close();
+    }
+
+
+
+
+
+    public Models.BlogTag newBlogCategory = new();
+    public List<Models.BlogTag> itemList = new();
+
+    protected override void OnInitialized()
+    {
+        GetItems();
+    }
+
+    public void GetItems()
+    {
+        itemList = _context.BlogTag.ToList();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        GetItems();
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("runDataTable", null);
+        }
+    }
+
+    public async Task Add()
+    {
+
+        try
+        {
+            _context.Add(newBlogCategory);
+            _context.SaveChanges();
+
+            newBlogCategory = new();
+            GetItems();
+            await _dialog.Close();
+            await JSRuntime.InvokeVoidAsync("AddingSuccess", null);
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("SomethingWentWrong", null);
+            throw;
+        }
+    }
+    public async Task Edit()
+    {
+
+        try
+        {
+
+            _context.Update(currentCategory);
+            _context.SaveChanges();
+            currentCategory = new();
+            GetItems();
+            await _dialogEdit.Close();
+            await JSRuntime.InvokeVoidAsync("AddingSuccess", null);
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("SomethingWentWrong", null);
+            throw;
+        }
+
+
+    }
+
+
+    private async Task Delete()
+    {
+        _context.Remove(currentCategory);
+        _context.SaveChanges();
+
+        currentCategory = new();
+        GetItems();
+        await _dialogDelete.Close();
+        await JSRuntime.InvokeVoidAsync("AddingSuccess", null);
+
+    }
+}

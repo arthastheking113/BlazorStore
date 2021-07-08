@@ -1,0 +1,414 @@
+﻿@page "/checkout"
+
+@using BlazorStore.Models
+@using BlazorStore.Data
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Identity
+@using BlazorStore.Services
+@using System.Threading.Tasks;
+@using Microsoft.AspNetCore.Identity.UI.Services;
+@using Microsoft.AspNetCore.Http;
+@using System.Threading;
+@using Microsoft.AspNetCore.WebUtilities;
+@using System.Text.Encodings.Web;
+@using System.Text;
+@using System.Collections.Generic;
+@using Microsoft.AspNetCore.Routing;
+@inject NavigationManager MyNavigationManager
+@inject IUserDetector _userDetector
+@inject IHttpContextAccessor _httpContextAccessor
+@inject ApplicationDbContext _context
+@inject AllItemStateModel AllItemStateModel
+@inject IImageService _imageService
+@inject IJSRuntime JSRuntime
+@inject SignInManager<CustomUser> _signInManager
+@inject UserManager<CustomUser> _userManager
+@inject IEmailSender _emailSender
+@inject LinkGenerator _generator
+
+@if (CartItem is null)
+{
+    <!-- Preloader -->
+    <div class="preloader">
+        <div class="preloader-inner">
+            <div class="preloader-icon">
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </div>
+    <!-- End Preloader -->
+}
+else
+{
+    <Head>
+    </Head>
+    <!-- Breadcrumbs -->
+    <div class="breadcrumbs">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="bread-inner">
+                        <ul class="bread-list">
+                            <li><a href="/">Home<i class="ti-arrow-right"></i></a></li>
+                            <li class="active"><a href="/checkout">Checkout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End Breadcrumbs -->
+    <!-- Start Checkout -->
+    <section class="shop checkout section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-12">
+                    <div class="checkout-form">
+                        <h2>Make Your Checkout Here</h2>
+                        <p style="margin-bottom:0;">Please register in order to checkout more quickly</p>
+                        <p style="margin-bottom:20px;"><span class="text-danger">* </span>Is Required</p>
+                        <!-- Form -->
+                        <EditForm Model="InformationCheckOut" OnValidSubmit=@ProcessToCheckOutAsync class="form">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6 col-12">
+                                    <div class="form-group">
+                                        <label>First Name<span>*</span></label>
+                                        <input type="text" @bind="InformationCheckOut.FirstName" placeholder="" required="required">
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6 col-12">
+                                    <div class="form-group">
+                                        <label>Last Name<span>*</span></label>
+                                        <input type="text" @bind="InformationCheckOut.LastName" placeholder="" required="required">
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6 col-12">
+                                    <div class="form-group">
+                                        <label>Email Address<span>*</span></label>
+                                        <input type="email" @bind="InformationCheckOut.Email" placeholder="" required="required">
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6 col-12">
+                                    <div class="form-group">
+                                        <label>Phone Number<span>*</span></label>
+                                        <input type="text" @bind="InformationCheckOut.PhoneNumber" placeholder="" required="required">
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6 col-12">
+                                    <div class="form-group">
+                                        <label>State<span>*</span></label>
+                                        <select class="form-control" @bind="InformationCheckOut.State" id="State" @onclick="ChooseState">
+                                            <option value="" id="blank_state_selection" selected="selected">Select a State</option>
+                                            <option value="Alabama">Alabama</option>
+                                            <option value="Alaska">Alaska</option>
+                                            <option value="Arizona">Arizona</option>
+                                            <option value="Arkansas">Arkansas</option>
+                                            <option value="California">California</option>
+                                            <option value="Colorado">Colorado</option>
+                                            <option value="Connecticut">Connecticut</option>
+                                            <option value="Delaware">Delaware</option>
+                                            <option value="Florida">Florida</option>
+                                            <option value="Georgia">Georgia</option>
+                                            <option value="Hawaii">Hawaii</option>
+                                            <option value="Idaho">Idaho</option>
+                                            <option value="Illinois">Illinois</option>
+                                            <option value="Indiana">Indiana</option>
+                                            <option value="Iowa">Iowa</option>
+                                            <option value="Kansas">Kansas</option>
+                                            <option value="Kentucky">Kentucky</option>
+                                            <option value="Louisiana">Louisiana</option>
+                                            <option value="Maine">Maine</option>
+                                            <option value="Maryland">Maryland</option>
+                                            <option value="Massachusetts">Massachusetts</option>
+                                            <option value="Michigan">Michigan</option>
+                                            <option value="Minnesota">Minnesota</option>
+                                            <option value="Mississippi">Mississippi</option>
+                                            <option value="Missouri">Missouri</option>
+                                            <option value="Montana">Montana</option>
+                                            <option value="Nebraska">Nebraska</option>
+                                            <option value="Nevada">Nevada</option>
+                                            <option value="New Hampshire">New Hampshire</option>
+                                            <option value="New Jersey">New Jersey</option>
+                                            <option value="New Mexico">New Mexico</option>
+                                            <option value="New York">New York</option>
+                                            <option value="North Carolina">North Carolina</option>
+                                            <option value="North Dakota">North Dakota</option>
+                                            <option value="Ohio">Ohio</option>
+                                            <option value="Oklahoma">Oklahoma</option>
+                                            <option value="Oregon">Oregon</option>
+                                            <option value="Pennsylvania">Pennsylvania</option>
+                                            <option value="Rhode Island">Rhode Island</option>
+                                            <option value="South Carolina">South Carolina</option>
+                                            <option value="South Dakota">South Dakota</option>
+                                            <option value="Tennessee">Tennessee</option>
+                                            <option value="Texas">Texas</option>
+                                            <option value="Utah">Utah</option>
+                                            <option value="Vermont">Vermont</option>
+                                            <option value="Virginia">Virginia</option>
+                                            <option value="Washington">Washington</option>
+                                            <option value="Washington DC">Washington DC</option>
+                                            <option value="West Virginia">West Virginia</option>
+                                            <option value="Wisconsin">Wisconsin</option>
+                                            <option value="Wyoming">Wyoming</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6 col-12">
+                                    <div class="form-group">
+                                        <label>City<span>*</span></label>
+                                        <select class="form-control" id="City" @bind="InformationCheckOut.City">
+                                            <option id="blank_city_selection" value="" selected="selected">Select a City</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6 col-12">
+                                    <div class="form-group">
+                                        <label>Address<span>*</span></label>
+                                        <input type="text" @bind="InformationCheckOut.Address" placeholder="" required="required">
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6 col-12">
+                                    <div class="form-group">
+                                        <label>Postal Code<span>*</span></label>
+                                        <input type="text" @bind="InformationCheckOut.Zipcode" placeholder="" required="required">
+                                    </div>
+                                </div>
+                                @if (!_httpContextAccessor.HttpContext.User.IsInRole("NormalUser"))
+                                {
+                                    <div class="col-12">
+                                        <div class="form-group create-account">
+                                            <input @bind="InformationCheckOut.CreateAccount" type="checkbox">
+                                            <label>Create an account?</label>
+                                        </div>
+                                    </div>
+                                }
+
+                                <div class="col-12 mt-2">
+                                    <div class="form-group">
+                                        <label>Notes (Optional)</label>
+                                        <input type="text" @bind="InformationCheckOut.Notes" placeholder="">
+                                    </div>
+                                </div>
+                                <!-- Modal -->
+                                <div class="modal fade p-0" style=" text-align: center;" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog  modal-dialog-centered" role="document" style=" text-align: center;">
+                                        <div class="modal-content custom-modal">
+                                            <div class="row mt-2">
+                                                <div class="col text-left">
+                                                    <h5 class="modal-title" style="margin-left:20px" id="exampleModalLabel">Hold Up</h5>
+                                                </div>
+                                                <div class="col-2 text-right">
+                                                    <button type="button" style="margin-right:20px;border:0px;" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div class="modal-body text-center">
+                                                <hr />
+                                                <h5>Are you sure you want to process?</h5>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <div class="row">
+                                                    <div class="col">
+                                                        <button type="submit" class="btn mb-2">Yeah, I'm sure</button>
+
+                                                        <button type="button" class="btn" data-dismiss="modal">No, I need to check my information</button>
+                                                    </div>
+                                                </div>
+
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </EditForm>
+                        <!--/ End Form -->
+                    </div>
+                </div>
+                <div class="col-lg-4 col-12">
+                    <p>* Free Shipping For Order More Than $40</p>
+                    <div class="order-details">
+                        <!-- Order Widget -->
+                        <div class="single-widget">
+                            <h2>CART  TOTALS</h2>
+                            <div class="content">
+                                <ul>
+                                    @if (CartItem is not null)
+                                    {
+                                        Item_total_price = 0;
+                                        foreach (var item in CartItem)
+                                        {
+                                            Item_total_price += float.Parse(item.Price) * (float)item.Quantity;
+                                        }
+                                        //total = (Item_total_price) * taxRate / (float)100 + Item_total_price;
+                                    }
+                                    <li>Sub Total<span>$@Item_total_price.ToString("0.##")</span></li>
+                                    @if (Item_total_price >= (float)40)
+                                    {
+                                        total = (Item_total_price) * taxRate / (float)100 + Item_total_price;
+                                        <li>(+) Shipping<span>Free</span></li>
+                                        <li class="last">Total<span>$@total.ToString("0.##")</span></li>
+                                    }
+                                    else if (CartItem.Count == 0)
+                                    {
+                                        <li>Shipping<span>$0.00</span></li>
+                                        <li class="last">You Pay<span>$0.00</span></li>
+                                    }
+                                    else
+                                    {
+                                        total = (Item_total_price + (float)20) * taxRate / (float)100 + (Item_total_price + (float)20);
+                                        <li>(+) Shipping<span>$20.00</span></li>
+                                        <li class="last">Total<span>$@((total).ToString("0.##"))</span></li>
+
+                                    }
+
+
+                                </ul>
+                            </div>
+                        </div>
+                        <!--/ End Order Widget -->
+                        <!-- Payment Method Widget -->
+                        <div class="single-widget payement">
+                            <div class="content">
+                                <img src="images/payment-method.png" alt="#">
+                            </div>
+                        </div>
+                        <!--/ End Payment Method Widget -->
+                        <!-- Button Widget -->
+                        <div class="single-widget get-button">
+                            <div class="content">
+                                <div class="button">
+                                    <button type="button" class="btn" data-toggle="modal" data-target="#exampleModal">
+                                        proceed to checkout
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <!--/ End Button Widget -->
+                        <!-- Button trigger modal -->
+
+
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!--/ End Checkout -->
+
+
+}
+
+
+
+@code {
+    [Parameter]
+    public List<Models.Cart> CartItem { get; set; }
+    public float total;
+    private Models.InformationCheckOut InformationCheckOut = new();
+    public string IpAddress;
+    public string connectionId;
+    public float Item_total_price;
+    public float taxRate = (float)7;
+    protected override void OnInitialized()
+    {
+        GetCart();
+    }
+
+    public void GetCart()
+    {
+        CartItem = _context.Cart.Where(i => i.CustomUserId == _userManager.GetUserId(_httpContextAccessor.HttpContext.User) && !i.IsSold).Include(i => i.Category).ToList();
+    }
+
+
+
+    public async Task ProcessToCheckOutAsync()
+    {
+        if (CartItem.Count >= 1)
+        {
+            if (InformationCheckOut.CreateAccount is true)
+            {
+                IpAddress = _userDetector.GetUserIpAdress();
+                connectionId = _userDetector.GetUserConnectionId();
+                var user = await _userManager.GetUserAsync(_httpContextAccessor.HttpContext.User);
+                user.FirstName = InformationCheckOut.FirstName;
+                user.LastName = InformationCheckOut.LastName;
+                user.PhoneNumber = InformationCheckOut.PhoneNumber;
+                user.Street = InformationCheckOut.Address;
+                user.State = InformationCheckOut.State;
+                user.City = InformationCheckOut.City;
+                user.Zipcode = InformationCheckOut.Zipcode;
+                user.Email = InformationCheckOut.Email;
+                user.UserName = InformationCheckOut.Email;
+                user.NormalizedUserName = InformationCheckOut.Email.ToUpper();
+                user.IpAdress = IpAddress;
+                user.ConnectionId = connectionId;
+
+
+
+
+                var code = await _userManager.GeneratePasswordResetTokenAsync(user);
+                code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+
+                await _userManager.AddToRoleAsync(user, "NormalUser");
+
+                var callbackUrl = _generator.GetUriByPage(_httpContextAccessor.HttpContext,
+                  "/Account/ResetPassword",
+                  handler: null,
+                  values: new { area = "Identity", code },
+                  scheme: _httpContextAccessor.HttpContext.Request.Scheme);
+
+
+                await _emailSender.SendEmailAsync(
+                    user.Email,
+                    "Wellcome to Lan's Market - Confirm Creating Account ",
+                    $"Please create your password by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+
+
+                _context.Update(user);
+                _context.SaveChanges();
+            }
+            else
+            {
+                var user = await _userManager.GetUserAsync(_httpContextAccessor.HttpContext.User);
+                user.FirstName = InformationCheckOut.FirstName;
+                user.LastName = InformationCheckOut.LastName;
+                user.PhoneNumber = InformationCheckOut.PhoneNumber;
+                user.Street = InformationCheckOut.Address;
+                user.State = InformationCheckOut.State;
+                user.City = InformationCheckOut.City;
+                user.Zipcode = InformationCheckOut.Zipcode;
+                user.Email = InformationCheckOut.Email;
+                user.IpAdress = IpAddress;
+                user.ConnectionId = connectionId;
+                user.Notes = InformationCheckOut.Notes;
+                _context.Update(user);
+                _context.SaveChanges();
+            }
+            await JSRuntime.InvokeAsync<string>("processToCheckOut", null);
+        }
+        else
+        {
+            await JSRuntime.InvokeAsync<string>("NeedItemInCart", null);
+        }
+
+    }
+
+    public async Task ChooseState()
+    {
+        await JSRuntime.InvokeAsync<string>("choose_state", null);
+    }
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        await JSRuntime.InvokeAsync<string>("sliderFunctions.startSlider", null);
+        await JSRuntime.InvokeAsync<string>("mobileFunction.startFunction", null);
+        //return base.OnAfterRenderAsync(firstRender);
+    }
+}

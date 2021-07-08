@@ -1,0 +1,33 @@
+﻿@page "/success/{trackingNumber}"
+@inject IJSRuntime JSRuntime
+<Head>
+</Head>
+
+<div class="jumbotron text-center" style="background-color:white;">
+    <h1 class="display-3">Thank You!</h1>
+    <p class="lead"><strong>Your Order Have Been Placed!</strong></p>
+    <p class="lead">Your Tracking Number is: <strong>@trackingNumber</strong></p>
+    <br />
+    <hr>
+    <br />
+    <p>
+        Having trouble? <a asp-controller="Home" asp-action="Contact">Contact us</a>
+    </p>
+    <p class="lead">
+        <a class="btn btn-primary btn-lg text-white" href="/">Continue Shopping</a>
+    </p>
+</div>
+
+@code {
+    [Parameter]
+    public string trackingNumber { get; set; }
+
+
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        await JSRuntime.InvokeAsync<string>("sliderFunctions.startSlider", null);
+        await JSRuntime.InvokeAsync<string>("mobileFunction.startFunction", null);
+        //return base.OnAfterRenderAsync(firstRender);
+    }
+}
