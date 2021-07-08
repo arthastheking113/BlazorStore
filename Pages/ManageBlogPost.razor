@@ -219,7 +219,7 @@
                     <EditForm Model="currentCategory" Context="EditPost" OnValidSubmit="Edit">
                         <DataAnnotationsValidator />
                         <ValidationSummary />
-
+                        <InputFile OnChange="@LoadFilesEdit" />
                         <div class="row">
                             <div class="col">
                                 <p>Title</p>
@@ -475,6 +475,19 @@
         newBlogCategory.ContentType = e.File.ContentType;
 
     }
+
+    private async Task LoadFilesEdit(InputFileChangeEventArgs e)
+    {
+        using var stream = new MemoryStream();
+        var file = e.File;
+        var OpenSteam = file.OpenReadStream();
+        await OpenSteam.CopyToAsync(stream);
+
+        currentCategory.ImageData = stream.ToArray();
+        currentCategory.ContentType = e.File.ContentType;
+
+    }
+
 
     void OnChangeIsProductReady(object value)
     {
