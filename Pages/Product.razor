@@ -376,18 +376,22 @@ else
 
                                         <div class="comments">
                                             <h3 class="comment-title">Comments (@CurrentItem.Comments.Count)</h3>
-
-                                            @foreach (var item in CurrentItem.Comments.OrderByDescending(i => i.Date))
+                                            @if (CurrentItem.Comments.Count != 0)
                                             {
-                                                <!-- Single Comment -->
-                                                <div class="single-comment">
-                                                    <img src="@_imageService.DecodeFileAvatar(item.CustomUser.ImageData, item.CustomUser.ContentType)" alt="#">
-                                                    <div class="content">
-                                                        <h4>@item.CustomUser.FullName <span>@item.Date</span></h4>
-                                                        <p>@item.Content</p>
+                                                @foreach (var item in CurrentItem.Comments.OrderByDescending(i => i.Date))
+                                                {
+                                                    var user = _context.Users.FirstOrDefault(c => c.Id == item.CustomUserId);
+                                                    <!-- Single Comment -->
+                                                    <div class="single-comment">
+                                                        <img src="@_imageService.DecodeFileAvatar(user.ImageData, user.ContentType)" alt="#">
+                                                        <div class="content">
+                                                            <h4>@user.FullName <span>@item.Date</span></h4>
+                                                            <p>@item.Content</p>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                <!-- End Single Comment -->
+                                                    <!-- End Single Comment -->
+                                                }
+
                                             }
 
 
@@ -641,11 +645,11 @@ else
 
     public async Task AddToCart()
     {
-        var number_of_some_item = (await _context.Cart
+        var number_of_some_item = _context.Cart
             .Where(i => i.CustomUserId == _userManager.GetUserId(_httpContextAccessor.HttpContext.User) && !i.IsSold && i.ItemId == CurrentItem.Id)
             .Include(i => i.Category)
             .Include(i => i.CustomUser)
-            .ToListAsync()).Count;
+            .ToList().Count;
         if (number_of_some_item == 0)
         {
             if (quantity > 0)
@@ -663,7 +667,7 @@ else
                     Slug = CurrentItem.Slug
                 };
                 _context.Add(newCart);
-                await _context.SaveChangesAsync();
+                _context.SaveChanges();
             }
             else
             {
@@ -680,7 +684,7 @@ else
                     Slug = CurrentItem.Slug
                 };
                 _context.Add(newCart);
-                await _context.SaveChangesAsync();
+                _context.SaveChanges();
             }
         }
         else
@@ -689,15 +693,15 @@ else
             {
                 quantity = 1;
             }
-            var Item = await _context.Cart
+            var Item = _context.Cart
                     .Include(i => i.Category)
                     .Include(i => i.CustomUser)
                     .Include(i => i.Item)
-                    .FirstOrDefaultAsync(m => m.ItemId == CurrentItem.Id);
+                    .FirstOrDefault(m => m.ItemId == CurrentItem.Id);
 
             Item.Quantity += quantity;
             _context.Update(Item);
-            await _context.SaveChangesAsync();
+            _context.SaveChanges();
         }
 
         GetCart();
