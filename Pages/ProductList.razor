@@ -370,7 +370,7 @@
                 NavigationManager.NavigateTo("/");
             }
         }
-        else if (String.IsNullOrEmpty(searchString))
+        else if (!String.IsNullOrEmpty(searchString))
         {
             searchString = searchString.ToLower();
             ListItem = await _context.Item.Include(i => i.Attachments)
