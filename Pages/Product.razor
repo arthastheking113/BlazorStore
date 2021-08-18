@@ -264,7 +264,7 @@ else
                 <div class="col-md-6"><img class="card-img-top mb-5 mb-md-0" src="@_imageService.DecodeFile(CurrentItem.ImageData, CurrentItem.ContentType)" alt="..." /></div>
                 <div class="col-md-6">
                     <div class="row mb-5">
-                        <div class="wrapper">
+                        <div class="wrapper" style="top:-5%;left:-5%;width:100%;transform:none;">
                             <div class="rating-holder">
                                 <div class="c-rating c-rating--big" data-rating-value="@CurrentItem.RateValue">
                                     <a disabled>1</a>
@@ -769,7 +769,7 @@ else
     {
         await JSRuntime.InvokeAsync<string>("sliderFunctions.startSlider", null);
         await JSRuntime.InvokeAsync<string>("mobileFunction.startFunction", null);
-        await JSRuntime.InvokeAsync<string>("scollToTop", null);
+        //await JSRuntime.InvokeAsync<string>("scollToTop", null);
     }
 
     public async Task AddComment()
