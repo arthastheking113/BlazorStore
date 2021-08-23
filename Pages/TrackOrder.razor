@@ -180,7 +180,7 @@ else
                                         <tr>
                                             <td class="image" data-title="No"><img src="@_imageService.DecodeFile(item.ImageData, item.ContentType)" style="width:100px;height:100px;" alt="#"></td>
                                             <td class="product-des" data-title="Description">
-                                                <p class="product-name"><a href="#">@item.Name</a></p>
+                                                <p class="product-name"><a href="/product/@item.Slug">@item.Name</a></p>
                                                 <p class="product-des">@item.Category.Name</p>
                                             </td>
                                             <td class="price" data-title="Price"><span>$@item.Price </span></td>
