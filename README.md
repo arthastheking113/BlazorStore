@@ -1,4 +1,4 @@
-# Personal E-Commerce Website Using Blazor
+# Personal E-Commerce Website Using Blazor Server
 
 E-Commerce websites are online portals that facilitate online transactions of goods and services through means of the transfer of information and funds over the Internet.
 
@@ -15,3 +15,9 @@ If you want to visit my ecommerce online market. You can click on this link to h
 http://duylanle-ecommerce.herokuapp.com/
 
 Notes: Because my ecommerce is hosted on a free Heroku server. So, it will take a minute to boot up.
+
+This application is working out of the box the first time you run it. I assume you already install **Postgres SQL**. (please install **Postgres SQL** and **PG Admin** to run it without any issue)
+
+Payment system is working. You can use Stripe Test Credit Card **4242 4242 4242 4242** with **any** date or code.
+
+This application is a **Testing** app. Not for production. Even it's working out of the box but you may want to do a lot of customization to make it a production ready.
