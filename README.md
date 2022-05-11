@@ -16,7 +16,7 @@ http://duylanle-ecommerce.herokuapp.com/
 
 Notes: Because my ecommerce is hosted on a free Heroku server. So, it will take a minute to boot up.
 
-This application is working out of the box the first time you run it. I assume you already install **Postgres SQL**. (please install **Postgres SQL** and **PG Admin** to run it without any issue)
+This application is working out of the box the first time you run it. I assume you already install **Postgres SQL** and .NET 6. (please install **Postgres SQL**, **PG Admin**, and .NET 6 to run it without any issue)
 
 Payment system is working. You can use Stripe Test Credit Card **4242 4242 4242 4242** with **any** date or code.
 
