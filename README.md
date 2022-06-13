@@ -16,7 +16,7 @@ http://duylanle-ecommerce.herokuapp.com/
 
 Notes: Because my ecommerce is hosted on a free Heroku server. So, it will take a minute to boot up.
 
-This application is working out of the box the first time you run it. I assume you already install **Postgres SQL** and .NET 6. (please install **Postgres SQL**, **PG Admin**, and .NET 6 to run it without any issue).
+This application is working out of the box the first time you run it. I assume you already install **Postgres SQL** and .NET 6, also changed connection string password to match your local postgres. (please install **Postgres SQL**, **PG Admin**, and .NET 6 to run it without any issue).
 
 You will use my Gmail EmailSender to send out email notification. Please search lanle97business@gmail.com and replace it with your smtp.google.com Email sender and your encryted password. You may need to register Google smtp in order to have those data.
 
